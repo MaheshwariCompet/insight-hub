@@ -83,8 +83,8 @@ function Dashboard() {
     setSelected(null);
   }
   function surprise() {
-    const fresh = combos.filter((c) => c.score >= 55 && !pick || key(c) !== key(pick));
-    if (!combos.length) return;
+    if (!combos.length || !pick) return;
+    const fresh = combos.filter((c) => c.score >= 55 && key(c) !== key(pick));
     const pool = fresh.length ? fresh : combos;
     setSelected(key(pool[Math.floor(Math.random() * pool.length)]!));
   }
