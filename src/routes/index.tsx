@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { Header } from "@/components/Header";
 import { useEffect, useMemo, useState } from "react";
 import {
   GAP_CANDIDATES, QUESTS, QUEST_TIPS, SAMPLE_WARDROBE, SAMPLE_WEEK, addDays, planWeek, rankCombos, scoreColor, today,
@@ -218,18 +219,6 @@ function Dashboard() {
 
 const key = (c: ScoreResult) => `${c.top.id}|${c.bottom.id}`;
 
-export function Header() {
-  return (
-    <header className="flex items-center justify-between">
-      <Link to="/" className="text-2xl font-extrabold tracking-tight">fit<span className="text-primary">check</span>✦</Link>
-      <div className="flex gap-2">
-        <Link to="/" className="chip bg-card" activeProps={{ className: "chip bg-accent" }} activeOptions={{ exact: true }}>Dashboard</Link>
-        <Link to="/analytics" className="chip bg-card" activeProps={{ className: "chip bg-accent" }}>Analytics</Link>
-      </div>
-    </header>
-  );
-}
-
 function Toggle({ on, onClick, label }: { on: boolean; onClick: () => void; label: string }) {
   return (
     <button onClick={onClick} className="flex items-center gap-2 font-semibold">
@@ -313,10 +302,6 @@ function History({ history, items, onClear }: { history: WearEntry[]; items: Ite
           {sorted.map((h) => <li key={h.date}><span className="font-mono text-xs">{h.date}</span> · {name(h.top)} + {name(h.bottom)}</li>)}
         </ul>
       )}
-      <button className="mt-2 text-xs underline" onClick={() => {
-        const t = items.find((i) => i.category === "top"); const b = items.find((i) => i.category === "bottom");
-        if (t && b) { /* demo: mark yesterday */ }
-      }} hidden />
       <p className="mt-2 text-xs text-muted-foreground">Yesterday: {addDays(today(), -1)}</p>
     </div>
   );
