@@ -84,8 +84,9 @@ function Dashboard() {
   }
   function surprise() {
     const fresh = combos.filter((c) => c.score >= 55 && !pick || key(c) !== key(pick));
+    if (!combos.length) return;
     const pool = fresh.length ? fresh : combos;
-    setSelected(key(pool[Math.floor(Math.random() * pool.length)]));
+    setSelected(key(pool[Math.floor(Math.random() * pool.length)]!));
   }
   const set = (p: Partial<Settings>) => setSettings({ ...settings, ...p });
 
