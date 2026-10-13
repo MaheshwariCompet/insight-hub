@@ -63,7 +63,7 @@ function Dashboard() {
       .catch(() => {});
   }, []);
 
-  const todayW = { ...week[0], rain: rainOverride ?? week[0].rain };
+  const todayW: DayWeather = { ...(week[0] ?? SAMPLE_WEEK[0]), rain: rainOverride ?? (week[0] ?? SAMPLE_WEEK[0]).rain };
   const combos = useMemo(() => rankCombos(items, todayW, settings, history), [items, todayW.rain, todayW.high, settings, history]);
   const pick = combos.find((c) => key(c) === selected) ?? combos[0];
   const plan = useMemo(() => planWeek(items, week, settings, history), [items, week, settings, history]);
@@ -82,7 +82,7 @@ function Dashboard() {
     setSelected(null);
   }
   function surprise() {
-    const fresh = combos.filter((c) => c.score >= 55 && key(c) !== key(pick));
+    const fresh = combos.filter((c) => c.score >= 55 && !pick || key(c) !== key(pick));
     const pool = fresh.length ? fresh : combos;
     setSelected(key(pool[Math.floor(Math.random() * pool.length)]));
   }
@@ -110,7 +110,7 @@ function Dashboard() {
             </div>
             <input type="range" min={0} max={100} value={todayW.rain} onChange={(e) => setRainOverride(+e.target.value)} className="mt-2 w-full" />
             {rainOverride !== null && (
-              <button onClick={() => setRainOverride(null)} className="text-xs underline">reset to forecast ({week[0].rain}%)</button>
+              <button onClick={() => setRainOverride(null)} className="text-xs underline">reset to forecast ({todayW.rain}%)</button>
             )}
           </div>
         </div>
@@ -161,7 +161,7 @@ function Dashboard() {
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {combos.map((c) => (
                   <button key={key(c)} onClick={() => setSelected(key(c))}
-                    className={`rounded-xl border-2 border-border p-2 text-left transition hover:-translate-y-0.5 ${key(c) === key(pick) ? "ring-4 ring-ring" : ""}`}>
+                    className={`rounded-xl border-2 border-border p-2 text-left transition hover:-translate-y-0.5 ${pick && key(c) === key(pick) ? "ring-4 ring-ring" : ""}`}>
                     <div className="flex gap-1">
                       <Swatch color={c.top.color} /><Swatch color={c.bottom.color} />
                     </div>
