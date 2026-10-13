@@ -63,7 +63,8 @@ function Dashboard() {
       .catch(() => {});
   }, []);
 
-  const todayW: DayWeather = { ...(week[0] ?? SAMPLE_WEEK[0]), rain: rainOverride ?? (week[0] ?? SAMPLE_WEEK[0]).rain };
+  const base0: DayWeather = week[0] ?? SAMPLE_WEEK[0]!;
+  const todayW: DayWeather = { ...base0, rain: rainOverride ?? base0.rain };
   const combos = useMemo(() => rankCombos(items, todayW, settings, history), [items, todayW.rain, todayW.high, settings, history]);
   const pick = combos.find((c) => key(c) === selected) ?? combos[0];
   const plan = useMemo(() => planWeek(items, week, settings, history), [items, week, settings, history]);

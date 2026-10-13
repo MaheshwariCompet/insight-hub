@@ -90,8 +90,8 @@ function daysBetween(a: string, b: string) {
 export interface ScoreResult {
   top: Item;
   bottom: Item;
-  shoes?: Item;
-  layer?: Item;
+  shoes?: Item | undefined;
+  layer?: Item | undefined;
   layerKind: "suitable" | "light" | "none";
   heat: number;
   rainReady: number;
@@ -115,7 +115,7 @@ export function eligible(items: Item[], s: Settings) {
 function pickLayer(items: Item[], top: Item, s: Settings) {
   const layers = items.filter((i) => i.layer && i.id !== top.id);
   if (!layers.length) return { layer: undefined, kind: "none" as const };
-  const best = [...layers].sort((a, b) => a.heat - b.heat)[0];
+  const best = [...layers].sort((a, b) => a.heat - b.heat)[0]!;
   return { layer: best, kind: best.heat <= 7 ? ("suitable" as const) : ("light" as const) };
 }
 
@@ -194,7 +194,7 @@ export function rankCombos(items: Item[], w: DayWeather, s: Settings, history: W
       const opts = shoes.length ? shoes : [undefined];
       const best = opts
         .map((sh) => scoreOutfit(t, b, sh, ok, w, s, history, on))
-        .sort((x, y) => y.score - x.score)[0];
+        .sort((x, y) => y.score - x.score)[0]!;
       out.push(best);
     }
   return out.sort((a, b) => b.score - a.score);
