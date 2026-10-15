@@ -63,16 +63,16 @@ export const QUEST_TIPS: Record<Quest, string> = {
 };
 
 export const SAMPLE_WARDROBE: Item[] = [
-  { id: "lilac", name: "Lilac shirt", category: "top", color: "#c8a2e8", heat: 8, rainPenalty: 0, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false, formal: 2 },
-  { id: "maroon", name: "Maroon shirt", category: "top", color: "#7a1f3d", heat: 6, rainPenalty: 0, wrinkles: false, rainSafe: true, crowdSafe: true, layer: true, formal: 2 },
-  { id: "tee", name: "White “Sunshine” tee", category: "top", color: "#fbfaf3", heat: 10, rainPenalty: 0.1, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false, formal: 0 },
-  { id: "satin", name: "Blush satin shirt", category: "top", color: "#f4c2c2", heat: 5, rainPenalty: 0.15, wrinkles: true, rainSafe: false, crowdSafe: true, layer: false, formal: 2 },
-  { id: "black", name: "Black trousers", category: "bottom", color: "#1d1d1f", heat: 5, rainPenalty: 0, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false, formal: 2 },
-  { id: "beige", name: "Beige pants", category: "bottom", color: "#d9c4a0", heat: 7, rainPenalty: 0.35, wrinkles: false, rainSafe: false, crowdSafe: true, layer: false, formal: 1 },
-  { id: "navy", name: "Navy wide-leg", category: "bottom", color: "#1f2f5c", heat: 8, rainPenalty: 0.1, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false, formal: 1 },
-  { id: "mesh", name: "Pink-white mesh sneakers", category: "shoes", color: "#f7b6cf", heat: 8, rainPenalty: 0, wrinkles: false, rainSafe: false, crowdSafe: true, layer: false, formal: 0 },
-  { id: "gold", name: "Gold jewelry", category: "accessory", color: "#d4a937", heat: 10, rainPenalty: 0, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false },
-  { id: "shades", name: "Mirrored sunglasses", category: "accessory", color: "#8fb8d8", heat: 10, rainPenalty: 0, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false },
+  { id: "lilac", season: "Summer", style: "Formal", name: "Lilac shirt", category: "top", color: "#c8a2e8", heat: 8, rainPenalty: 0, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false, formal: 2 },
+  { id: "maroon", season: "All-season", style: "Formal", name: "Maroon shirt", category: "top", color: "#7a1f3d", heat: 6, rainPenalty: 0, wrinkles: false, rainSafe: true, crowdSafe: true, layer: true, formal: 2 },
+  { id: "tee", season: "Summer", style: "Casual", name: "White “Sunshine” tee", category: "top", color: "#fbfaf3", heat: 10, rainPenalty: 0.1, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false, formal: 0 },
+  { id: "satin", season: "All-season", style: "Formal", name: "Blush satin shirt", category: "top", color: "#f4c2c2", heat: 5, rainPenalty: 0.15, wrinkles: true, rainSafe: false, crowdSafe: true, layer: false, formal: 2 },
+  { id: "black", season: "All-season", style: "Formal", name: "Black trousers", category: "bottom", color: "#1d1d1f", heat: 5, rainPenalty: 0, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false, formal: 2 },
+  { id: "beige", season: "Summer", style: "Casual", name: "Beige pants", category: "bottom", color: "#d9c4a0", heat: 7, rainPenalty: 0.35, wrinkles: false, rainSafe: false, crowdSafe: true, layer: false, formal: 1 },
+  { id: "navy", season: "Monsoon", style: "Casual", name: "Navy wide-leg", category: "bottom", color: "#1f2f5c", heat: 8, rainPenalty: 0.1, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false, formal: 1 },
+  { id: "mesh", season: "Summer", style: "Sporty", name: "Pink-white mesh sneakers", category: "shoes", color: "#f7b6cf", heat: 8, rainPenalty: 0, wrinkles: false, rainSafe: false, crowdSafe: true, layer: false, formal: 0 },
+  { id: "gold", season: "All-season", style: "Formal", name: "Gold jewelry", category: "accessory", color: "#d4a937", heat: 10, rainPenalty: 0, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false },
+  { id: "shades", season: "Summer", style: "Casual", name: "Mirrored sunglasses", category: "accessory", color: "#8fb8d8", heat: 10, rainPenalty: 0, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false },
 ];
 
 export const GAP_CANDIDATES: Item[] = [
