@@ -20,7 +20,7 @@ export const Route = createFileRoute("/planner")({
   component: Planner,
 });
 
-type Outfit = { top?: Item; bottom?: Item; shoes?: Item };
+type Outfit = { top?: Item | undefined; bottom?: Item | undefined; shoes?: Item | undefined };
 const rand = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)];
 
 function Planner() {
