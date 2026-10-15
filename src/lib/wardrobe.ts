@@ -1,4 +1,9 @@
-export type Category = "top" | "bottom" | "shoes" | "accessory";
+export type Category = "top" | "bottom" | "shoes" | "outerwear" | "accessory";
+export type Season = "Summer" | "Monsoon" | "Winter" | "All-season";
+export type Style = "Casual" | "Formal" | "Sporty";
+export const CATEGORIES: Category[] = ["top", "bottom", "shoes", "outerwear", "accessory"];
+export const SEASONS: Season[] = ["Summer", "Monsoon", "Winter", "All-season"];
+export const STYLES: Style[] = ["Casual", "Formal", "Sporty"];
 export type Quest = "Deep Focus" | "Standup / Demo" | "Hackathon" | "Pitch" | "Casual";
 export type Commute = "crowded" | "walking" | "car" | "bike";
 
@@ -14,6 +19,16 @@ export interface Item {
   crowdSafe: boolean;
   layer: boolean;
   formal?: number; // 0-2
+  season?: Season;
+  style?: Style;
+  image?: string;
+}
+
+export function seasonOf(i: Item): Season {
+  return i.season ?? "All-season";
+}
+export function styleOf(i: Item): Style {
+  return i.style ?? ((i.formal ?? 1) >= 2 ? "Formal" : "Casual");
 }
 
 export interface WearEntry {
@@ -113,7 +128,7 @@ export function eligible(items: Item[], s: Settings) {
 }
 
 function pickLayer(items: Item[], top: Item, s: Settings) {
-  const layers = items.filter((i) => i.layer && i.id !== top.id);
+  const layers = items.filter((i) => (i.layer || i.category === "outerwear") && i.id !== top.id);
   if (!layers.length) return { layer: undefined, kind: "none" as const };
   const best = [...layers].sort((a, b) => a.heat - b.heat)[0]!;
   return { layer: best, kind: best.heat <= 7 ? ("suitable" as const) : ("light" as const) };
