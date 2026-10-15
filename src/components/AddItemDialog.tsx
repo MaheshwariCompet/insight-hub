@@ -40,7 +40,7 @@ export function AddItemDialog({ trigger }: { trigger?: React.ReactNode }) {
       color: f.color,
       season: f.season,
       style: f.style,
-      image: res.data.image || undefined,
+      ...(res.data.image ? { image: res.data.image } : {}),
       heat: HEAT[f.season],
       rainPenalty: f.rainSafe ? 0 : 0.2,
       rainSafe: f.rainSafe,

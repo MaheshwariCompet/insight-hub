@@ -248,7 +248,7 @@ function OutfitPanel({ c, w, settings, items, onWear, onSurprise }: { c: ScoreRe
           {[["Top", c.top], ["Bottom", c.bottom], ["Shoes", c.shoes], ["Layer", settings.coldAC ? c.layer : undefined]].map(([l, it]) =>
             it ? (
               <div key={l as string} className="flex items-center gap-3 rounded-xl border-2 border-border bg-card p-2">
-                <Swatch color={(it as Item).color} big />
+                <ItemThumb item={it as Item} />
                 <div><p className="font-mono text-[10px] uppercase text-muted-foreground">{l as string}</p><p className="font-bold leading-tight">{(it as Item).name}</p></div>
               </div>
             ) : null,
