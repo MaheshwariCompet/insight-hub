@@ -38,7 +38,7 @@ function Planner() {
     setO(c ? { top: c.top, bottom: c.bottom, shoes: c.shoes } : {});
   }
   function log() {
-    if (!o.top || !o.bottom) return toast.error("Pick at least a top and a bottom");
+    if (!o.top || !o.bottom) { toast.error("Pick at least a top and a bottom"); return; }
     logOutfit({ date, top: o.top.id, bottom: o.bottom.id, shoes: o.shoes?.id ?? "" });
     toast.success(`Outfit logged for ${date}`);
   }
