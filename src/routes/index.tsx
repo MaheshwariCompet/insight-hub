@@ -1,9 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { toast } from "sonner";
+import { useStore } from "@/lib/store";
+import { ItemThumb } from "@/components/AddItemDialog";
+import { ItemFilters, NO_FILTERS, applyFilters } from "@/components/ItemFilters";
 import { Header } from "@/components/Header";
 import { useEffect, useMemo, useState } from "react";
 import {
-  GAP_CANDIDATES, QUESTS, QUEST_TIPS, SAMPLE_WARDROBE, SAMPLE_WEEK, addDays, planWeek, rankCombos, scoreColor, today,
-  type Category, type Commute, type DayWeather, type Item, type ScoreResult, type Settings, type WearEntry,
+  CATEGORIES, GAP_CANDIDATES, QUESTS, QUEST_TIPS, SAMPLE_WEEK, addDays, rankCombos, scoreColor, today,
+  type Commute, type DayWeather, type Item, type ScoreResult, type Settings, type WearEntry,
 } from "@/lib/wardrobe";
 
 export const Route = createFileRoute("/")({
@@ -20,34 +24,16 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-function useLocal<T>(key: string, init: T) {
-  const [v, setV] = useState<T>(init);
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw) setV(JSON.parse(raw));
-    } catch {}
-    setReady(true);
-  }, [key]);
-  useEffect(() => {
-    if (ready) localStorage.setItem(key, JSON.stringify(v));
-  }, [key, v, ready]);
-  return [v, setV] as const;
-}
-
 const toneBg = { good: "bg-good", ok: "bg-ok", bad: "bg-bad" } as const;
 
 function Dashboard() {
-  const [items, setItems] = useLocal<Item[]>("fc-wardrobe", SAMPLE_WARDROBE);
-  const [history, setHistory] = useLocal<WearEntry[]>("fc-history", []);
-  const [settings, setSettings] = useLocal<Settings>("fc-settings", { quest: "Casual", zeroIron: false, commute: "car", coldAC: false });
+  const { items, history, settings, setHistory, setSettings, logOutfit } = useStore();
+  const [filters, setFilters] = useState(NO_FILTERS);
   const [week, setWeek] = useState<DayWeather[]>(SAMPLE_WEEK);
   const [live, setLive] = useState(false);
   const [rainOverride, setRainOverride] = useState<number | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [cart, setCart] = useState<string[]>([]);
-  const [tab, setTab] = useState<"today" | "week" | "closet">("today");
 
   useEffect(() => {
     fetch("https://api.open-meteo.com/v1/forecast?latitude=13.08&longitude=80.27&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=5&timezone=Asia%2FKolkata")
@@ -67,7 +53,7 @@ function Dashboard() {
   const todayW: DayWeather = { ...base0, rain: rainOverride ?? base0.rain };
   const combos = useMemo(() => rankCombos(items, todayW, settings, history), [items, todayW.rain, todayW.high, settings, history]);
   const pick = combos.find((c) => key(c) === selected) ?? combos[0];
-  const plan = useMemo(() => planWeek(items, week, settings, history), [items, week, settings, history]);
+  const filtered = applyFilters(items, filters);
   const goodCount = combos.filter((c) => c.score >= 70).length;
   const tops = items.filter((i) => i.category === "top").length;
   const bottoms = items.filter((i) => i.category === "bottom").length;
@@ -79,7 +65,8 @@ function Dashboard() {
   }, [items, todayW.rain, settings, history, goodCount]);
 
   function wear(c: ScoreResult) {
-    setHistory([...history.filter((h) => h.date !== today()), { date: today(), top: c.top.id, bottom: c.bottom.id, shoes: c.shoes?.id ?? "" }]);
+    logOutfit({ date: today(), top: c.top.id, bottom: c.bottom.id, shoes: c.shoes?.id ?? "" });
+    toast.success("Logged today's outfit");
     setSelected(null);
   }
   function surprise() {
@@ -142,13 +129,33 @@ function Dashboard() {
         Your {items.length} pieces make {tops * bottoms} looks · {goodCount} suit today
       </p>
 
-      <nav className="mt-6 flex gap-2">
-        {(["today", "week", "closet"] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)} className={`btn-pop px-4 py-2 capitalize ${tab === t ? "bg-ink text-background" : "bg-card"}`}>{t === "week" ? "Weekly plan" : t === "closet" ? "My closet" : "Today"}</button>
+      <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {[["Total", items.length], ...CATEGORIES.map((c) => [c, items.filter((i) => i.category === c).length]), ["Logged", history.length]].map(([l, n]) => (
+          <div key={l as string} className="fit-card p-3 text-center">
+            <p className="text-3xl font-extrabold">{n}</p>
+            <p className="font-mono text-xs uppercase">{l}</p>
+          </div>
         ))}
-      </nav>
+      </section>
 
-      {tab === "today" && (
+      <section className="fit-card mt-6 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-lg font-extrabold">Browse by tag <span className="font-mono text-sm">({filtered.length})</span></h3>
+          <Link to="/wardrobe" className="text-sm font-semibold underline">Open full wardrobe →</Link>
+        </div>
+        <div className="mt-3"><ItemFilters f={filters} setF={setFilters} /></div>
+        <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+          {filtered.map((i) => (
+            <div key={i.id} className="w-28 shrink-0 text-center">
+              <ItemThumb item={i} size="h-24 w-28" />
+              <p className="mt-1 truncate text-xs font-semibold">{i.name}</p>
+            </div>
+          ))}
+          {filtered.length === 0 && <p className="text-sm text-muted-foreground">No pieces match.</p>}
+        </div>
+      </section>
+
+      {(
         <section className="mt-5 grid gap-5 lg:grid-cols-5">
           <div className="lg:col-span-3">
             {pick ? (
@@ -195,26 +202,6 @@ function Dashboard() {
         </section>
       )}
 
-      {tab === "week" && (
-        <section className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {plan.map(({ day, pick: p }, i) => (
-            <div key={day.date} className="fit-card p-4">
-              <p className="font-mono text-xs uppercase">{i === 0 ? "Today" : new Date(day.date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric" })}</p>
-              <p className="text-2xl font-extrabold">{day.high}° <span className="text-sm font-normal">☔ {day.rain}%</span></p>
-              {p ? (
-                <>
-                  <div className="mt-3 flex gap-1"><Swatch color={p.top.color} big /><Swatch color={p.bottom.color} big />{p.shoes && <Swatch color={p.shoes.color} big />}</div>
-                  <p className="mt-2 text-sm font-semibold">{p.top.name}</p>
-                  <p className="text-sm text-muted-foreground">{p.bottom.name}</p>
-                  <span className={`mt-2 inline-block rounded-full border-2 border-border px-2 font-mono text-xs font-bold ${toneBg[scoreColor(p.score)]}`}>{p.score}</span>
-                </>
-              ) : <p className="mt-2 text-sm">No combos</p>}
-            </div>
-          ))}
-        </section>
-      )}
-
-      {tab === "closet" && <Closet items={items} setItems={setItems} />}
     </div>
   );
 }
@@ -261,7 +248,7 @@ function OutfitPanel({ c, w, settings, items, onWear, onSurprise }: { c: ScoreRe
           {[["Top", c.top], ["Bottom", c.bottom], ["Shoes", c.shoes], ["Layer", settings.coldAC ? c.layer : undefined]].map(([l, it]) =>
             it ? (
               <div key={l as string} className="flex items-center gap-3 rounded-xl border-2 border-border bg-card p-2">
-                <Swatch color={(it as Item).color} big />
+                <ItemThumb item={it as Item} />
                 <div><p className="font-mono text-[10px] uppercase text-muted-foreground">{l as string}</p><p className="font-bold leading-tight">{(it as Item).name}</p></div>
               </div>
             ) : null,
@@ -306,58 +293,5 @@ function History({ history, items, onClear }: { history: WearEntry[]; items: Ite
       )}
       <p className="mt-2 text-xs text-muted-foreground">Yesterday: {addDays(today(), -1)}</p>
     </div>
-  );
-}
-
-function Closet({ items, setItems }: { items: Item[]; setItems: (i: Item[]) => void }) {
-  const blank = { name: "", category: "top" as Category, color: "#f28b82", heat: 7, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false };
-  const [f, setF] = useState(blank);
-  function add() {
-    if (!f.name.trim()) return;
-    setItems([...items, { ...f, id: crypto.randomUUID(), rainPenalty: f.rainSafe ? 0 : 0.2, formal: 1 }]);
-    setF(blank);
-  }
-  return (
-    <section className="mt-5 grid gap-5 lg:grid-cols-3">
-      <div className="fit-card space-y-3 p-5">
-        <h3 className="text-lg font-extrabold">Add a piece</h3>
-        <input value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="e.g. Mint cotton kurta" className="w-full rounded-xl border-2 border-border bg-card px-3 py-2" />
-        <div className="flex flex-wrap gap-2">
-          {(["top", "bottom", "shoes", "accessory"] as Category[]).map((c) => (
-            <button key={c} onClick={() => setF({ ...f, category: c })} className={`chip capitalize ${f.category === c ? "bg-primary text-primary-foreground" : "bg-card"}`}>{c}</button>
-          ))}
-        </div>
-        <label className="flex items-center gap-3 font-semibold">Color <input type="color" value={f.color} onChange={(e) => setF({ ...f, color: e.target.value })} className="h-9 w-14 rounded border-2 border-border" /></label>
-        <label className="block font-semibold">Heat score: <span className="font-mono">{f.heat}</span>
-          <input type="range" min={0} max={10} value={f.heat} onChange={(e) => setF({ ...f, heat: +e.target.value })} className="w-full" />
-        </label>
-        <div className="flex flex-wrap gap-3 text-sm">
-          <Toggle on={f.wrinkles} onClick={() => setF({ ...f, wrinkles: !f.wrinkles })} label="Wrinkles easily" />
-          <Toggle on={f.rainSafe} onClick={() => setF({ ...f, rainSafe: !f.rainSafe })} label="Fine in rain" />
-          <Toggle on={f.crowdSafe} onClick={() => setF({ ...f, crowdSafe: !f.crowdSafe })} label="Crowd safe" />
-          <Toggle on={f.layer} onClick={() => setF({ ...f, layer: !f.layer })} label="Wear open as layer" />
-        </div>
-        <button onClick={add} className="btn-pop w-full bg-primary py-2 text-primary-foreground">Add to closet</button>
-        <button onClick={() => setItems(SAMPLE_WARDROBE)} className="w-full text-xs underline">Reset to sample wardrobe</button>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:col-span-2">
-        {items.map((i) => (
-          <div key={i.id} className="fit-card flex items-start gap-3 p-3">
-            <Swatch color={i.color} big />
-            <div className="flex-1">
-              <p className="font-bold leading-tight">{i.name}</p>
-              <p className="font-mono text-xs uppercase text-muted-foreground">{i.category} · heat {i.heat}</p>
-              <div className="mt-1 flex flex-wrap gap-1 text-[11px]">
-                {i.wrinkles && <span className="chip bg-ok">wrinkles</span>}
-                {!i.rainSafe && <span className="chip bg-rain">not rain-safe</span>}
-                {!i.crowdSafe && <span className="chip bg-bad">fragile</span>}
-                {i.layer && <span className="chip bg-secondary">layer</span>}
-              </div>
-            </div>
-            <button onClick={() => setItems(items.filter((x) => x.id !== i.id))} aria-label={`Remove ${i.name}`} className="text-lg">✕</button>
-          </div>
-        ))}
-      </div>
-    </section>
   );
 }
