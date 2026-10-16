@@ -236,7 +236,7 @@ function OutfitPanel({ c, w, settings, items, onWear, onSurprise }: { c: ScoreRe
   return (
     <div className="fit-card overflow-hidden">
       <div className="flex items-center justify-between border-b-2 border-border bg-accent px-5 py-3">
-        <span className="font-mono text-sm font-bold uppercase">✦ Fit check ✦</span>
+        <span className="font-mono text-sm font-bold uppercase">✦ Today's pick ✦</span>
         <span className={`rounded-full border-2 border-border px-3 py-0.5 font-mono text-lg font-bold ${toneBg[scoreColor(c.score)]}`}>{c.score}/100</span>
       </div>
       <div className="grid gap-5 p-5 sm:grid-cols-2">
