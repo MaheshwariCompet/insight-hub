@@ -9,9 +9,9 @@ import { SAMPLE_WEEK, planWeek, rankCombos, today, type Item } from "@/lib/wardr
 export const Route = createFileRoute("/planner")({
   head: () => ({
     meta: [
-      { title: "Outfit Planner — FitCheck" },
+      { title: "Outfit Planner — Aadai Nanban" },
       { name: "description", content: "Generate outfits from your closet, log what you wore and plan the week." },
-      { property: "og:title", content: "Outfit Planner — FitCheck" },
+      { property: "og:title", content: "Outfit Planner — Aadai Nanban" },
       { property: "og:description", content: "Generate, log and plan outfits from your own wardrobe." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

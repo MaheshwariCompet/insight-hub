@@ -1,3 +1,13 @@
+import lilacImg from "@/assets/items/lilac.jpg";
+import maroonImg from "@/assets/items/maroon.jpg";
+import teeImg from "@/assets/items/tee.jpg";
+import satinImg from "@/assets/items/satin.jpg";
+import blackImg from "@/assets/items/black.jpg";
+import beigeImg from "@/assets/items/beige.jpg";
+import navyImg from "@/assets/items/navy.jpg";
+import meshImg from "@/assets/items/mesh.jpg";
+import goldImg from "@/assets/items/gold.jpg";
+import shadesImg from "@/assets/items/shades.jpg";
 export type Category = "top" | "bottom" | "shoes" | "outerwear" | "accessory";
 export type Season = "Summer" | "Monsoon" | "Winter" | "All-season";
 export type Style = "Casual" | "Formal" | "Sporty";
@@ -74,6 +84,8 @@ export const SAMPLE_WARDROBE: Item[] = [
   { id: "gold", season: "All-season", style: "Formal", name: "Gold jewelry", category: "accessory", color: "#d4a937", heat: 10, rainPenalty: 0, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false },
   { id: "shades", season: "Summer", style: "Casual", name: "Mirrored sunglasses", category: "accessory", color: "#8fb8d8", heat: 10, rainPenalty: 0, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false },
 ];
+
+export const SAMPLE_IMAGES: Record<string, string> = { lilac: lilacImg, maroon: maroonImg, tee: teeImg, satin: satinImg, black: blackImg, beige: beigeImg, navy: navyImg, mesh: meshImg, gold: goldImg, shades: shadesImg };
 
 export const GAP_CANDIDATES: Item[] = [
   { id: "gap-sneaker", name: "Black rubber-sole sneakers", category: "shoes", color: "#222", heat: 7, rainPenalty: 0, wrinkles: false, rainSafe: true, crowdSafe: true, layer: false, formal: 1 },

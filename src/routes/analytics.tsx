@@ -5,9 +5,9 @@ import { Header } from "@/components/Header";
 export const Route = createFileRoute("/analytics")({
   head: () => ({
     meta: [
-      { title: "FitCheck Analytics — Why Mornings Go Wrong" },
+      { title: "Aadai Nanban Analytics — Why Mornings Go Wrong" },
       { name: "description", content: "Insights from 110,000 simulated mornings: mismatch causes, planners vs non-planners, rain and shoes." },
-      { property: "og:title", content: "FitCheck Analytics — Why Mornings Go Wrong" },
+      { property: "og:title", content: "Aadai Nanban Analytics — Why Mornings Go Wrong" },
       { property: "og:description", content: "Mismatch causes, planner impact and repetition from 110,000 simulated mornings." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -92,7 +92,7 @@ function Analytics() {
             <Stat big="78.7%" label="of days planners repeated an outfit" tone="bg-ok" />
             <Stat big="21.4%" label="for non-planners" tone="bg-muted" />
           </div>
-          <p className="mt-4 text-sm">Planners' top 3 outfits covered <b>~72%</b> of days — why FitCheck tracks wear history and has a <b>Surprise me</b> button.</p>
+          <p className="mt-4 text-sm">Planners' top 3 outfits covered <b>~72%</b> of days — why Aadai Nanban tracks wear history and has a <b>Surprise me</b> button.</p>
         </div>
 
         <div className="fit-card p-5">
@@ -101,7 +101,7 @@ function Analytics() {
             <Stat big="35%" label="wore non-rain-ready shoes on rain days" tone="bg-rain" />
             <Stat big="22.5%" label="of them got wet feet" tone="bg-bad" />
           </div>
-          <p className="mt-4 text-sm">On 40%+ rain days, FitCheck ranks unsafe shoes last.</p>
+          <p className="mt-4 text-sm">On 40%+ rain days, Aadai Nanban ranks unsafe shoes last.</p>
         </div>
       </section>
     </div>
