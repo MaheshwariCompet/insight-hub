@@ -10,9 +10,9 @@ import { SAMPLE_WARDROBE, seasonOf, styleOf } from "@/lib/wardrobe";
 export const Route = createFileRoute("/wardrobe")({
   head: () => ({
     meta: [
-      { title: "My Wardrobe — FitCheck" },
+      { title: "My Wardrobe — Aadai Nanban" },
       { name: "description", content: "Browse, filter and add every piece in your closet." },
-      { property: "og:title", content: "My Wardrobe — FitCheck" },
+      { property: "og:title", content: "My Wardrobe — Aadai Nanban" },
       { property: "og:description", content: "A filterable grid of every piece in your closet." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

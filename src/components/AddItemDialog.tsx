@@ -3,7 +3,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useStore } from "@/lib/store";
-import { CATEGORIES, SEASONS, STYLES, type Category, type Season, type Style } from "@/lib/wardrobe";
+import { SAMPLE_IMAGES, CATEGORIES, SEASONS, STYLES, type Category, type Season, type Style } from "@/lib/wardrobe";
 
 const schema = z.object({
   name: z.string().trim().min(1, "Give the item a name").max(60, "Keep the name under 60 characters"),
@@ -23,10 +23,21 @@ export function AddItemDialog({ trigger }: { trigger?: React.ReactNode }) {
   function onFile(file?: File) {
     if (!file) return;
     if (!file.type.startsWith("image/")) return setErr("Pick an image file");
-    if (file.size > 1_000_000) return setErr("Image must be under 1 MB");
-    const r = new FileReader();
-    r.onload = () => setF((p) => ({ ...p, image: String(r.result) }));
-    r.readAsDataURL(file);
+    if (file.size > 15_000_000) return setErr("Image must be under 15 MB");
+    // Shrink the photo so many pieces fit in browser storage.
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const max = 600, k = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
+      setF((p) => ({ ...p, image: c.toDataURL("image/jpeg", 0.8) }));
+      setErr(null);
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => setErr("Couldn't read that photo");
+    img.src = url;
   }
 
   function save(e: React.FormEvent) {
@@ -82,9 +93,14 @@ export function AddItemDialog({ trigger }: { trigger?: React.ReactNode }) {
             <label className="block text-sm font-semibold">Image link (optional)
               <input value={f.image.startsWith("data:") ? "" : f.image} onChange={(e) => setF({ ...f, image: e.target.value.trim() })} placeholder="https://…" className="mt-1 w-full rounded-xl border-2 border-border bg-card px-3 py-2" />
             </label>
-            <label className="block text-sm font-semibold">…or upload a photo
-              <input type="file" accept="image/*" onChange={(e) => onFile(e.target.files?.[0])} className="mt-1 block w-full text-sm" />
-            </label>
+            <div className="flex flex-wrap gap-2">
+              <label className="btn-pop cursor-pointer bg-accent px-3 py-1.5 text-sm">📷 Take photo
+                <input type="file" accept="image/*" capture="environment" onChange={(e) => onFile(e.target.files?.[0])} className="hidden" />
+              </label>
+              <label className="btn-pop cursor-pointer bg-card px-3 py-1.5 text-sm">🖼️ Upload from gallery
+                <input type="file" accept="image/*" onChange={(e) => onFile(e.target.files?.[0])} className="hidden" />
+              </label>
+            </div>
             {f.image && <img src={f.image} alt="Preview" className="h-24 w-24 rounded-xl border-2 border-border object-cover" />}
           </div>
           <div className="flex flex-wrap gap-4 text-sm font-semibold">
@@ -99,9 +115,10 @@ export function AddItemDialog({ trigger }: { trigger?: React.ReactNode }) {
   );
 }
 
-export function ItemThumb({ item, size = "h-10 w-10" }: { item: { color: string; image?: string; name: string }; size?: string }) {
-  return item.image ? (
-    <img src={item.image} alt={item.name} className={`${size} shrink-0 rounded-md border-2 border-border object-cover`} />
+export function ItemThumb({ item, size = "h-10 w-10" }: { item: { id?: string; color: string; image?: string; name: string }; size?: string }) {
+  const src = item.image ?? (item.id ? SAMPLE_IMAGES[item.id] : undefined);
+  return src ? (
+    <img src={src} alt={item.name} loading="lazy" className={`${size} shrink-0 rounded-md border-2 border-border object-cover`} />
   ) : (
     <span className={`${size} inline-block shrink-0 rounded-md border-2 border-border`} style={{ background: item.color }} />
   );

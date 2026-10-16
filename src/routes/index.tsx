@@ -13,9 +13,9 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "FitCheck Dashboard — Today's Outfit" },
+      { title: "Aadai Nanban Dashboard — Today's Outfit" },
       { name: "description", content: "Pick a weather-aware outfit from your own wardrobe in under 10 seconds." },
-      { property: "og:title", content: "FitCheck Dashboard — Today's Outfit" },
+      { property: "og:title", content: "Aadai Nanban Dashboard — Today's Outfit" },
       { property: "og:description", content: "Weather-aware, no-iron, commute-proof outfit picks from your closet." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -172,7 +172,7 @@ function Dashboard() {
                   <button key={key(c)} onClick={() => setSelected(key(c))}
                     className={`rounded-xl border-2 border-border p-2 text-left transition hover:-translate-y-0.5 ${pick && key(c) === key(pick) ? "ring-4 ring-ring" : ""}`}>
                     <div className="flex gap-1">
-                      <Swatch color={c.top.color} /><Swatch color={c.bottom.color} />
+                      <ItemThumb item={c.top} size="h-10 w-10" /><ItemThumb item={c.bottom} size="h-10 w-10" />
                     </div>
                     <p className="mt-1 truncate text-xs font-semibold">{c.top.name}</p>
                     <p className="truncate text-xs text-muted-foreground">{c.bottom.name}</p>
@@ -185,7 +185,7 @@ function Dashboard() {
               <div className="fit-card bg-secondary p-5">
                 <p className="font-mono text-xs uppercase">Shop the gap</p>
                 <div className="mt-2 flex items-center gap-3">
-                  <Swatch color={gap.g.color} big />
+                  <ItemThumb item={gap.g} size="h-14 w-14" />
                   <div>
                     <p className="font-bold">{gap.g.name}</p>
                     <p className="text-sm">Unlocks +{gap.gain} great looks today</p>
@@ -219,10 +219,6 @@ function Toggle({ on, onClick, label }: { on: boolean; onClick: () => void; labe
   );
 }
 
-function Swatch({ color, big }: { color: string; big?: boolean }) {
-  return <span className={`inline-block rounded-md border-2 border-border ${big ? "h-10 w-10" : "h-6 w-6"}`} style={{ background: color }} />;
-}
-
 function Meter({ label, value, tone }: { label: string; value: number; tone: string }) {
   return (
     <div>
@@ -240,7 +236,7 @@ function OutfitPanel({ c, w, settings, items, onWear, onSurprise }: { c: ScoreRe
   return (
     <div className="fit-card overflow-hidden">
       <div className="flex items-center justify-between border-b-2 border-border bg-accent px-5 py-3">
-        <span className="font-mono text-sm font-bold uppercase">✦ Fit check ✦</span>
+        <span className="font-mono text-sm font-bold uppercase">✦ Today's pick ✦</span>
         <span className={`rounded-full border-2 border-border px-3 py-0.5 font-mono text-lg font-bold ${toneBg[scoreColor(c.score)]}`}>{c.score}/100</span>
       </div>
       <div className="grid gap-5 p-5 sm:grid-cols-2">
@@ -248,7 +244,7 @@ function OutfitPanel({ c, w, settings, items, onWear, onSurprise }: { c: ScoreRe
           {[["Top", c.top], ["Bottom", c.bottom], ["Shoes", c.shoes], ["Layer", settings.coldAC ? c.layer : undefined]].map(([l, it]) =>
             it ? (
               <div key={l as string} className="flex items-center gap-3 rounded-xl border-2 border-border bg-card p-2">
-                <ItemThumb item={it as Item} />
+                <ItemThumb item={it as Item} size="h-14 w-14" />
                 <div><p className="font-mono text-[10px] uppercase text-muted-foreground">{l as string}</p><p className="font-bold leading-tight">{(it as Item).name}</p></div>
               </div>
             ) : null,
