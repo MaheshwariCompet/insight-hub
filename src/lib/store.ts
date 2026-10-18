@@ -1,19 +1,27 @@
 import { useSyncExternalStore } from "react";
-import { SAMPLE_WARDROBE, type Item, type Settings, type WearEntry } from "./wardrobe";
+import { SAMPLE_WARDROBE, type Item, type Settings, type WearEntry, type Place, type Profile } from "./wardrobe";
 
 // Tiny persisted store shared by every page; survives refresh via localStorage.
 interface State {
   items: Item[];
   history: WearEntry[];
   settings: Settings;
+  location: Place;
+  profile: Profile;
+  favorites: string[];
+  plans: WearEntry[];
 }
 
 const DEFAULTS: State = {
   items: SAMPLE_WARDROBE,
   history: [],
   settings: { quest: "Casual", zeroIron: false, commute: "car", coldAC: false },
+  location: { name: "Chennai", latitude: 13.08, longitude: 80.27 },
+  profile: { name: "", work: "" },
+  favorites: [],
+  plans: [],
 };
-const KEYS = { items: "fc-wardrobe", history: "fc-history", settings: "fc-settings" } as const;
+const KEYS = { items: "fc-wardrobe", history: "fc-history", settings: "fc-settings", location: "fc-location", profile: "fc-profile", favorites: "fc-favorites", plans: "fc-plans" } as const;
 
 let state: State = DEFAULTS;
 let loaded = false;
@@ -33,10 +41,8 @@ function load() {
 }
 
 function set<K extends keyof State>(k: K, v: State[K]) {
+  localStorage.setItem(KEYS[k], JSON.stringify(v));
   state = { ...state, [k]: v };
-  try {
-    localStorage.setItem(KEYS[k], JSON.stringify(v));
-  } catch {}
   listeners.forEach((l) => l());
 }
 
@@ -49,16 +55,22 @@ function subscribe(l: () => void) {
 export function useStore() {
   const s = useSyncExternalStore(
     subscribe,
-    () => (load(), state),
+    () => state,
     () => DEFAULTS,
   );
   return {
     ...s,
     setItems: (v: Item[]) => set("items", v),
     addItem: (i: Item) => set("items", [...state.items, i]),
+    addItems: (v: Item[]) => set("items", [...state.items, ...v]),
     removeItem: (id: string) => set("items", state.items.filter((x) => x.id !== id)),
     setHistory: (v: WearEntry[]) => set("history", v),
     logOutfit: (e: WearEntry) => set("history", [...state.history.filter((h) => h.date !== e.date), e]),
     setSettings: (v: Settings) => set("settings", v),
+    setLocation: (v: Place) => set("location", v),
+    setProfile: (v: Profile) => set("profile", v),
+    toggleFavorite: (key: string) => set("favorites", state.favorites.includes(key) ? state.favorites.filter((x) => x !== key) : [...state.favorites, key]),
+    savePlan: (e: WearEntry) => set("plans", [...state.plans.filter((p) => p.date !== e.date), e]),
+    removePlan: (date: string) => set("plans", state.plans.filter((p) => p.date !== date)),
   };
 }

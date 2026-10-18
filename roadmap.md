@@ -1,0 +1,5 @@
+- [x] Simplify multi-photo item uploads and fabric-based recommendations.
+- [x] Add shared location weather, everyday overview, weekly plans and missed-day logging.
+- [x] Add profile and favorite outfits; replace simulated analytics with real wardrobe insights.
+- [x] Apply minimalist boutique styling and verify the central flows.
+- [x] Enable and verify AI photo analysis with a real uploaded photo.

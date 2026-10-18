@@ -6,6 +6,8 @@ import { AddItemDialog, ItemThumb } from "@/components/AddItemDialog";
 import { ItemFilters, NO_FILTERS, applyFilters } from "@/components/ItemFilters";
 import { useStore } from "@/lib/store";
 import { SAMPLE_WARDROBE, seasonOf, styleOf } from "@/lib/wardrobe";
+import { Button } from "@/components/ui/button";
+import { Plus, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/wardrobe")({
   head: () => ({
@@ -28,37 +30,35 @@ function Wardrobe() {
   const shown = applyFilters(items, f).filter((i) => i.name.toLowerCase().includes(q.toLowerCase()));
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 md:py-10">
+    <div className="page-shell">
       <Header />
       <div className="mt-8 flex flex-wrap items-end justify-between gap-3">
-        <h1 className="text-4xl font-extrabold">My Wardrobe <span className="font-mono text-xl text-muted-foreground">{shown.length}/{items.length}</span></h1>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search pieces…" className="rounded-full border-2 border-border bg-card px-4 py-2" />
+        <h1>My Wardrobe <span className="text-lg text-muted-foreground">{shown.length}/{items.length}</span></h1>
+        <input aria-label="Search pieces" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search pieces…" />
       </div>
-      <div className="fit-card mt-5 p-4"><ItemFilters f={f} setF={setF} /></div>
+      <div className="mt-6 border-y border-border py-4"><ItemFilters f={f} setF={setF} /></div>
+      {items.some((i) => SAMPLE_WARDROBE.some((s) => s.id === i.id)) && <p className="mt-3 text-xs text-muted-foreground">Sample pieces are included. Replace them with photos of your own clothes.</p>}
 
       <section className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {shown.map((i) => (
           <div key={i.id} className="fit-card flex flex-col overflow-hidden">
-            <ItemThumb item={i} size="h-40 w-full !rounded-none !border-0 border-b-2" />
+            <ItemThumb item={i} size="h-60 w-full !rounded-none !border-0" />
             <div className="flex flex-1 flex-col p-3">
               <p className="font-bold leading-tight">{i.name}</p>
               <div className="mt-2 flex flex-wrap gap-1 text-[11px]">
                 <span className="chip bg-accent capitalize">{i.category}</span>
-                <span className="chip bg-secondary">{seasonOf(i)}</span>
-                <span className="chip bg-muted">{styleOf(i)}</span>
+                <span className="chip bg-muted">{i.fabric ?? "Fabric not recorded"}</span>
               </div>
-              <button onClick={() => { removeItem(i.id); toast(`${i.name} removed`); }} className="mt-auto pt-3 text-left text-xs font-semibold underline">Remove</button>
+              <Button title={`Remove ${i.name}`} aria-label={`Remove ${i.name}`} variant="ghost" size="icon" onClick={() => { removeItem(i.id); toast(`${i.name} removed`); }} className="mt-3 self-end"><Trash2 /></Button>
             </div>
           </div>
         ))}
         <AddItemDialog trigger={
-          <button className="fit-card flex min-h-48 flex-col items-center justify-center gap-2 border-dashed p-4 text-lg font-bold">
-            <span className="text-4xl">+</span>Add item
-          </button>
+          <Button variant="outline" className="flex h-auto min-h-64 flex-col gap-3 border-dashed"><Plus className="!h-7 !w-7" />Add clothes</Button>
         } />
       </section>
       {shown.length === 0 && <p className="mt-4 text-muted-foreground">Nothing matches these filters.</p>}
-      <button onClick={() => setItems(SAMPLE_WARDROBE)} className="mt-6 text-xs underline">Reset to sample wardrobe</button>
+      <Button variant="link" size="sm" onClick={() => { if (window.confirm("Replace your wardrobe with the sample pieces? Your uploaded pieces will be removed.")) setItems(SAMPLE_WARDROBE); }} className="mt-6">Reset to sample wardrobe</Button>
     </div>
   );
 }

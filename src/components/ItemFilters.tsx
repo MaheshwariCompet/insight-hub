@@ -1,4 +1,5 @@
 import { CATEGORIES, SEASONS, STYLES, seasonOf, styleOf, type Item } from "@/lib/wardrobe";
+import { Button } from "./ui/button";
 
 export interface Filters { category: string | null; season: string | null; style: string | null }
 export const NO_FILTERS: Filters = { category: null, season: null, style: null };
@@ -15,8 +16,8 @@ export function ItemFilters({ f, setF, showCategory = true }: { f: Filters; setF
   const row = (k: keyof Filters, opts: readonly string[]) => (
     <div className="flex flex-wrap gap-2">
       {opts.map((o) => (
-        <button key={o} onClick={() => setF({ ...f, [k]: f[k] === o ? null : o })}
-          className={`chip capitalize ${f[k] === o ? "bg-primary text-primary-foreground" : "bg-card"}`}>{o}</button>
+        <Button key={o} variant={f[k] === o ? "default" : "outline"} size="sm" aria-pressed={f[k] === o} onClick={() => setF({ ...f, [k]: f[k] === o ? null : o })}
+          className="capitalize">{o}</Button>
       ))}
     </div>
   );
@@ -24,11 +25,7 @@ export function ItemFilters({ f, setF, showCategory = true }: { f: Filters; setF
   return (
     <div className="space-y-2">
       {showCategory && row("category", CATEGORIES)}
-      {row("season", SEASONS)}
-      <div className="flex flex-wrap items-center gap-2">
-        {row("style", STYLES)}
-        {active && <button onClick={() => setF(NO_FILTERS)} className="text-xs underline">clear filters</button>}
-      </div>
+      {active && <Button variant="link" size="sm" onClick={() => setF(NO_FILTERS)}>Clear filters</Button>}
     </div>
   );
 }
