@@ -41,7 +41,7 @@ export function AddItemDialog({ trigger }: { trigger?: ReactNode }) {
   }
   async function analyze(draft: Draft) {
     setAnalyzing(draft.id); setError("");
-    try { const response = await inspect({ data: { image: draft.image } }); if (response.result) update(draft.id, response.result); else setError(response.error ?? "Couldn't analyze this photo."); }
+    try { const response = await inspect({ data: { image: draft.image } }); if (response.result) update(draft.id, { ...response.result, fabric: draft.fabric === "Not sure" ? response.result.fabric : draft.fabric }); else setError(response.error ?? "Couldn't analyze this photo."); }
     catch { setError("Couldn't analyze this photo. You can still enter the details yourself."); }
     finally { setAnalyzing(null); }
   }

@@ -41,10 +41,8 @@ function load() {
 }
 
 function set<K extends keyof State>(k: K, v: State[K]) {
+  localStorage.setItem(KEYS[k], JSON.stringify(v));
   state = { ...state, [k]: v };
-  try {
-    localStorage.setItem(KEYS[k], JSON.stringify(v));
-  } catch {}
   listeners.forEach((l) => l());
 }
 
