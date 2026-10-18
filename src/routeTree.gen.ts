@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as PlannerRouteImport } from './routes/planner'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as WardrobeRouteImport } from './routes/wardrobe'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const PlannerRoute = PlannerRouteImport.update({
   path: '/planner',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WardrobeRoute = WardrobeRouteImport.update({
   id: '/wardrobe',
   path: '/wardrobe',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/planner': typeof PlannerRoute
+  '/profile': typeof ProfileRoute
   '/wardrobe': typeof WardrobeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/planner': typeof PlannerRoute
+  '/profile': typeof ProfileRoute
   '/wardrobe': typeof WardrobeRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/planner': typeof PlannerRoute
+  '/profile': typeof ProfileRoute
   '/wardrobe': typeof WardrobeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/analytics' | '/planner' | '/wardrobe'
+  fullPaths: '/' | '/analytics' | '/planner' | '/profile' | '/wardrobe'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/analytics' | '/planner' | '/wardrobe'
-  id: '__root__' | '/' | '/analytics' | '/planner' | '/wardrobe'
+  to: '/' | '/analytics' | '/planner' | '/profile' | '/wardrobe'
+  id: '__root__' | '/' | '/analytics' | '/planner' | '/profile' | '/wardrobe'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyticsRoute: typeof AnalyticsRoute
   PlannerRoute: typeof PlannerRoute
+  ProfileRoute: typeof ProfileRoute
   WardrobeRoute: typeof WardrobeRoute
 }
 
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlannerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wardrobe': {
       id: '/wardrobe'
       path: '/wardrobe'
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
   PlannerRoute: PlannerRoute,
+  ProfileRoute: ProfileRoute,
   WardrobeRoute: WardrobeRoute,
 }
 export const routeTree = rootRouteImport
