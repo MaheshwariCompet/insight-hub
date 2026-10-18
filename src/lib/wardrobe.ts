@@ -63,7 +63,7 @@ export function fabricProperties(fabric: string) {
   const heat = ({ Cotton: 9, Linen: 10, Polyester: 6, Denim: 5, Wool: 3, Silk: 7, Blend: 7 } as Record<string, number>)[fabric] ?? 7;
   return { heat, wrinkles: ["Linen", "Cotton", "Silk"].includes(fabric), rainSafe: fabric === "Polyester", rainPenalty: fabric === "Polyester" ? 0 : 0.15 };
 }
-export function outfitKey(c: { top: Item; bottom: Item; shoes?: Item }) { return [c.top.id, c.bottom.id, c.shoes?.id ?? ""].join("|"); }
+export function outfitKey(c: { top: Item; bottom: Item; shoes?: Item | undefined }) { return [c.top.id, c.bottom.id, c.shoes?.id ?? ""].join("|"); }
 
 export interface DayWeather {
   date: string;

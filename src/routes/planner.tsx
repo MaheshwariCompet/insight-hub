@@ -12,23 +12,23 @@ import { useWeather } from "@/lib/weather";
 import { rankCombos, outfitKey, today, type Item } from "@/lib/wardrobe";
 
 export const Route = createFileRoute("/planner")({
-  validateSearch: (search: Record<string, unknown>): { outfit?: string; date?: string } => ({ ...(typeof search.outfit === "string" ? { outfit: search.outfit } : {}), ...(typeof search.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(search.date) && Number.isFinite(Date.parse(search.date)) ? { date: search.date } : {}) }),
+  validateSearch: (search: Record<string, unknown>): { outfit?: string; date?: string } => ({ ...(typeof search["outfit"] === "string" ? { outfit: search["outfit"] } : {}), ...(typeof search["date"] === "string" && /^\d{4}-\d{2}-\d{2}$/.test(search["date"]) && Number.isFinite(Date.parse(search["date"])) ? { date: search["date"] } : {}) }),
   head: () => ({ meta: [{ title: "Outfit Planner — Aadai Nanban" }, { name: "description", content: "Choose outfits, save upcoming plans and record what you wore." }, { property: "og:title", content: "Outfit Planner — Aadai Nanban" }, { property: "og:description", content: "Plan with your own clothes and local weather, and keep a daily wear history." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }), component: Planner,
 });
-type Outfit = { top?: Item; bottom?: Item; shoes?: Item };
+type Outfit = { top?: Item | undefined; bottom?: Item | undefined; shoes?: Item | undefined };
 function Planner() {
   const search = Route.useSearch();
   const { items, history, plans, settings, logOutfit, setHistory, savePlan, removePlan, favorites, toggleFavorite } = useStore();
   const weather = useWeather();
-  const [date, setDate] = useState(search.date ?? today()), [outfit, setOutfit] = useState<Outfit>({}), [mode, setMode] = useState("weather");
+  const [date, setDate] = useState(search["date"] ?? today()), [outfit, setOutfit] = useState<Outfit>({}), [mode, setMode] = useState("weather");
   const forecast = weather.data?.find((d) => d.date === date) ?? weather.data?.[0];
   const combos = forecast ? rankCombos(items, forecast, settings, history, date) : [];
   useEffect(() => {
-    const date = search.date ?? today(); setDate(date);
+    const date = search["date"] ?? today(); setDate(date);
     const saved = [...history, ...plans].find((p) => p.date === date);
-    const ids = search.outfit?.split("|") ?? (saved ? [saved.top, saved.bottom, saved.shoes] : []);
+    const ids = search["outfit"]?.split("|") ?? (saved ? [saved.top, saved.bottom, saved.shoes] : []);
     if (ids.length) setOutfit({ top: items.find((i) => i.id === ids[0]), bottom: items.find((i) => i.id === ids[1]), shoes: items.find((i) => i.id === ids[2]) });
-  }, [search.date, search.outfit, items]);
+  }, [search["date"], search["outfit"], items]);
   const selectDate = (value: string) => { setDate(value); const saved = [...history, ...plans].find((p) => p.date === value); if (saved) setOutfit({ top: items.find((i) => i.id === saved.top), bottom: items.find((i) => i.id === saved.bottom), shoes: items.find((i) => i.id === saved.shoes) }); };
   function generate() {
     if (mode === "random") { const pick = (c: Item["category"]) => { const pool = items.filter((i) => i.category === c); return pool[Math.floor(Math.random() * pool.length)]; }; setOutfit({ top: pick("top"), bottom: pick("bottom"), shoes: pick("shoes") }); return; }
@@ -36,7 +36,7 @@ function Planner() {
     if (next) setOutfit({ top: next.top, bottom: next.bottom, shoes: next.shoes }); else toast.error("Add a top and bottom, and check the forecast first.");
   }
   function save() {
-    if (!outfit.top || !outfit.bottom) return toast.error("Choose a top and a bottom first.");
+    if (!outfit.top || !outfit.bottom) { toast.error("Choose a top and a bottom first."); return; }
     const entry = { date, top: outfit.top.id, bottom: outfit.bottom.id, shoes: outfit.shoes?.id ?? "" };
     if (date > today()) { savePlan(entry); toast.success(`Outfit planned for ${date}`); } else { logOutfit(entry); removePlan(date); toast.success(`Outfit recorded for ${date}`); }
   }

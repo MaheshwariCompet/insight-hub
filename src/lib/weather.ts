@@ -4,7 +4,7 @@ import type { DayWeather, Place } from "./wardrobe";
 
 export async function fetchWeather(place: Place, signal?: AbortSignal): Promise<DayWeather[]> {
   const params = new URLSearchParams({ latitude: String(place.latitude), longitude: String(place.longitude), daily: "temperature_2m_max,temperature_2m_min,precipitation_probability_max", forecast_days: "7", timezone: "auto" });
-  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, { signal });
+  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`, { signal: signal ?? null });
   if (!response.ok) throw new Error("Weather is unavailable. Please try again.");
   const { daily } = await response.json();
   if (!Array.isArray(daily?.time)) throw new Error("Weather is unavailable. Please try again.");
