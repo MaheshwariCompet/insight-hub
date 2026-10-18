@@ -1,125 +1,66 @@
-import { useState } from "react";
-import { z } from "zod";
+import { useRef, useState, type ReactNode } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { Plus, Upload, Camera, X, Sparkles, ImageOff } from "lucide-react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
-import { SAMPLE_IMAGES, CATEGORIES, SEASONS, STYLES, type Category, type Season, type Style } from "@/lib/wardrobe";
+import { analyzePhoto } from "@/lib/photo.functions";
+import { SAMPLE_IMAGES, CATEGORIES, FABRICS, fabricProperties, type Category } from "@/lib/wardrobe";
 
-const schema = z.object({
-  name: z.string().trim().min(1, "Give the item a name").max(60, "Keep the name under 60 characters"),
-  image: z.union([z.literal(""), z.string().url("Enter a valid image link").max(2000), z.string().startsWith("data:image/")]),
-});
-
-const HEAT: Record<Season, number> = { Summer: 9, Monsoon: 7, Winter: 4, "All-season": 7 };
-const FORMAL: Record<Style, number> = { Casual: 0, Sporty: 0, Formal: 2 };
-
-export function AddItemDialog({ trigger }: { trigger?: React.ReactNode }) {
-  const { addItem } = useStore();
-  const [open, setOpen] = useState(false);
-  const blank = { name: "", category: "top" as Category, color: "#f28b82", season: "All-season" as Season, style: "Casual" as Style, image: "", rainSafe: true, wrinkles: false };
-  const [f, setF] = useState(blank);
-  const [err, setErr] = useState<string | null>(null);
-
-  function onFile(file?: File) {
-    if (!file) return;
-    if (!file.type.startsWith("image/")) return setErr("Pick an image file");
-    if (file.size > 15_000_000) return setErr("Image must be under 15 MB");
-    // Shrink the photo so many pieces fit in browser storage.
-    const url = URL.createObjectURL(file);
-    const img = new Image();
+type Draft = { id: string; name: string; category: Category; fabric: string; color: string; image: string; note: string };
+function readPhoto(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith("image/")) return reject(new Error("Choose image files only."));
+    if (file.size > 15_000_000) return reject(new Error("Each photo must be under 15 MB."));
+    const url = URL.createObjectURL(file), img = new Image();
     img.onload = () => {
-      const max = 600, k = Math.min(1, max / Math.max(img.width, img.height));
-      const c = document.createElement("canvas");
-      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-      c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
-      setF((p) => ({ ...p, image: c.toDataURL("image/jpeg", 0.8) }));
-      setErr(null);
-      URL.revokeObjectURL(url);
+      const scale = Math.min(1, 600 / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas"); canvas.width = Math.max(1, Math.round(img.width * scale)); canvas.height = Math.max(1, Math.round(img.height * scale));
+      const context = canvas.getContext("2d"); URL.revokeObjectURL(url);
+      if (!context) return reject(new Error("Couldn't prepare this photo."));
+      context.drawImage(img, 0, 0, canvas.width, canvas.height); resolve(canvas.toDataURL("image/jpeg", 0.75));
     };
-    img.onerror = () => setErr("Couldn't read that photo");
-    img.src = url;
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Couldn't read this photo. Try a JPG or PNG.")); }; img.src = url;
+  });
+}
+export function AddItemDialog({ trigger }: { trigger?: ReactNode }) {
+  const { addItems } = useStore();
+  const inspect = useServerFn(analyzePhoto);
+  const [open, setOpen] = useState(false), [drafts, setDrafts] = useState<Draft[]>([]), [busy, setBusy] = useState(false), [analyzing, setAnalyzing] = useState<string | null>(null), [error, setError] = useState("");
+  const uploadRef = useRef<HTMLInputElement>(null), cameraRef = useRef<HTMLInputElement>(null);
+  const update = (id: string, patch: Partial<Draft>) => setDrafts((rows) => rows.map((row) => row.id === id ? { ...row, ...patch } : row));
+  async function upload(files: FileList | null) {
+    if (!files?.length) return; setBusy(true); setError("");
+    const next: Draft[] = [];
+    for (const file of Array.from(files)) {
+      try { next.push({ id: crypto.randomUUID(), name: file.name.replace(/\.[^.]+$/, "").slice(0, 60), category: "top", fabric: "Not sure", color: "#808080", image: await readPhoto(file), note: "" }); }
+      catch (e) { setError(e instanceof Error ? e.message : "Couldn't read this photo."); }
+    }
+    setDrafts((rows) => [...rows, ...next]); setBusy(false);
   }
-
+  async function analyze(draft: Draft) {
+    setAnalyzing(draft.id); setError("");
+    try { const response = await inspect({ data: { image: draft.image } }); if (response.result) update(draft.id, response.result); else setError(response.error ?? "Couldn't analyze this photo."); }
+    catch { setError("Couldn't analyze this photo. You can still enter the details yourself."); }
+    finally { setAnalyzing(null); }
+  }
   function save(e: React.FormEvent) {
     e.preventDefault();
-    const res = schema.safeParse(f);
-    if (!res.success) return setErr(res.error.issues[0]!.message);
-    addItem({
-      id: crypto.randomUUID(),
-      name: res.data.name,
-      category: f.category,
-      color: f.color,
-      season: f.season,
-      style: f.style,
-      ...(res.data.image ? { image: res.data.image } : {}),
-      heat: HEAT[f.season],
-      rainPenalty: f.rainSafe ? 0 : 0.2,
-      rainSafe: f.rainSafe,
-      wrinkles: f.wrinkles,
-      crowdSafe: true,
-      layer: f.category === "outerwear",
-      formal: FORMAL[f.style],
-    });
-    toast.success(`${res.data.name} added to your wardrobe`);
-    setF(blank);
-    setErr(null);
-    setOpen(false);
+    if (!drafts.length || drafts.some((d) => !d.name.trim())) return setError("Add a photo and a name for each piece.");
+    try { addItems(drafts.map((d) => ({ id: d.id, name: d.name.trim(), category: d.category, fabric: d.fabric, color: d.color, image: d.image, ...fabricProperties(d.fabric), crowdSafe: true, layer: d.category === "outerwear", formal: 1 }))); toast.success(`${drafts.length} piece${drafts.length === 1 ? "" : "s"} added to your wardrobe`); setDrafts([]); setOpen(false); }
+    catch { setError("Your browser storage is full. Remove a few photos and try again."); }
   }
-
-  const pill = (on: boolean) => `chip capitalize ${on ? "bg-primary text-primary-foreground" : "bg-card"}`;
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger ?? <button className="btn-pop bg-primary px-4 py-2 text-primary-foreground">+ Add item</button>}</DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto border-2 border-border">
-        <DialogHeader><DialogTitle className="text-2xl font-extrabold">Add a piece</DialogTitle></DialogHeader>
-        <form onSubmit={save} className="space-y-4">
-          <label className="block text-sm font-semibold">Item name
-            <input autoFocus value={f.name} maxLength={60} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="e.g. Mint cotton kurta" className="mt-1 w-full rounded-xl border-2 border-border bg-card px-3 py-2" />
-          </label>
-          <div><p className="text-sm font-semibold">Category</p>
-            <div className="mt-1 flex flex-wrap gap-2">{CATEGORIES.map((c) => <button type="button" key={c} onClick={() => setF({ ...f, category: c })} className={pill(f.category === c)}>{c}</button>)}</div>
-          </div>
-          <div><p className="text-sm font-semibold">Season</p>
-            <div className="mt-1 flex flex-wrap gap-2">{SEASONS.map((c) => <button type="button" key={c} onClick={() => setF({ ...f, season: c })} className={pill(f.season === c)}>{c}</button>)}</div>
-          </div>
-          <div><p className="text-sm font-semibold">Style</p>
-            <div className="mt-1 flex flex-wrap gap-2">{STYLES.map((c) => <button type="button" key={c} onClick={() => setF({ ...f, style: c })} className={pill(f.style === c)}>{c}</button>)}</div>
-          </div>
-          <label className="flex items-center gap-3 text-sm font-semibold">Color
-            <input type="color" value={f.color} onChange={(e) => setF({ ...f, color: e.target.value })} className="h-9 w-14 rounded border-2 border-border" />
-          </label>
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold">Image link (optional)
-              <input value={f.image.startsWith("data:") ? "" : f.image} onChange={(e) => setF({ ...f, image: e.target.value.trim() })} placeholder="https://…" className="mt-1 w-full rounded-xl border-2 border-border bg-card px-3 py-2" />
-            </label>
-            <div className="flex flex-wrap gap-2">
-              <label className="btn-pop cursor-pointer bg-accent px-3 py-1.5 text-sm">📷 Take photo
-                <input type="file" accept="image/*" capture="environment" onChange={(e) => onFile(e.target.files?.[0])} className="hidden" />
-              </label>
-              <label className="btn-pop cursor-pointer bg-card px-3 py-1.5 text-sm">🖼️ Upload from gallery
-                <input type="file" accept="image/*" onChange={(e) => onFile(e.target.files?.[0])} className="hidden" />
-              </label>
-            </div>
-            {f.image && <img src={f.image} alt="Preview" className="h-24 w-24 rounded-xl border-2 border-border object-cover" />}
-          </div>
-          <div className="flex flex-wrap gap-4 text-sm font-semibold">
-            <label className="flex items-center gap-2"><input type="checkbox" checked={f.rainSafe} onChange={(e) => setF({ ...f, rainSafe: e.target.checked })} /> Fine in rain</label>
-            <label className="flex items-center gap-2"><input type="checkbox" checked={f.wrinkles} onChange={(e) => setF({ ...f, wrinkles: e.target.checked })} /> Wrinkles easily</label>
-          </div>
-          {err && <p className="text-sm font-semibold text-destructive">{err}</p>}
-          <button type="submit" className="btn-pop w-full bg-primary py-2 text-primary-foreground">Save to wardrobe</button>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
+  return <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild>{trigger ?? <Button><Plus />Add clothes</Button>}</DialogTrigger><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle className="text-2xl">Add to your wardrobe</DialogTitle><DialogDescription>Choose photos of your own clothes.</DialogDescription></DialogHeader>
+    <input ref={uploadRef} aria-label="Upload clothing photos" type="file" accept="image/*" multiple className="hidden" onChange={(e) => { void upload(e.target.files); e.target.value = ""; }} />
+    <input ref={cameraRef} aria-label="Take clothing photo" type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => { void upload(e.target.files); e.target.value = ""; }} />
+    <div className="flex flex-wrap gap-2"><Button disabled={busy || !!analyzing} variant="outline" onClick={() => uploadRef.current?.click()}><Upload />{busy ? "Preparing photos…" : "Choose photos"}</Button><Button disabled={busy || !!analyzing} variant="ghost" onClick={() => cameraRef.current?.click()}><Camera />Take a photo</Button></div><p className="text-xs text-muted-foreground">On a phone, Take a photo opens the camera when supported. On a computer, it may open the same file picker.</p>
+    <form onSubmit={save} className="space-y-5">{drafts.map((d, i) => <div key={d.id} className="border-t border-border pt-4"><div className="flex items-start gap-4"><img src={d.image} alt={d.name || "Clothing photo"} className="h-28 w-24 rounded-md object-cover" /><div className="min-w-0 flex-1 space-y-3"><label className="block text-sm">Item name<input aria-label={`Item name ${i + 1}`} required maxLength={60} value={d.name} onChange={(e) => update(d.id, { name: e.target.value })} className="mt-1 w-full" /></label><div className="grid grid-cols-2 gap-3"><label className="text-sm">Category<select aria-label={`Category ${i + 1}`} value={d.category} onChange={(e) => update(d.id, { category: e.target.value as Category })} className="mt-1 w-full">{CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}</select></label><label className="text-sm">Cloth type<select aria-label={`Cloth type ${i + 1}`} value={d.fabric} onChange={(e) => update(d.id, { fabric: e.target.value })} className="mt-1 w-full">{FABRICS.map((f) => <option key={f}>{f}</option>)}</select></label></div><label className="flex items-center gap-3 text-sm">Color<input aria-label={`Color ${i + 1}`} type="color" value={d.color} onChange={(e) => update(d.id, { color: e.target.value })} className="h-8 w-12 p-0" /></label></div><Button type="button" size="icon" variant="ghost" aria-label={`Remove photo ${i + 1}`} onClick={() => setDrafts((rows) => rows.filter((r) => r.id !== d.id))}><X /></Button></div><Button type="button" variant="link" disabled={!!analyzing || busy} onClick={() => analyze(d)} className="mt-2 px-0"><Sparkles />{analyzing === d.id ? "Checking photo…" : "Suggest details with AI"}</Button>{d.note && <p className="text-xs text-muted-foreground">{d.note}</p>}</div>)}
+    {drafts.length > 0 && <p className="text-xs text-muted-foreground">Fabric and weather guide comfort estimates. Photos cannot confirm fibers or waterproofing; check the clothing label.</p>}{error && <p role="alert" className="text-sm text-destructive">{error}</p>}<Button type="submit" disabled={!drafts.length || busy || !!analyzing} className="w-full">Save {drafts.length || ""} {drafts.length === 1 ? "piece" : "pieces"}</Button></form>
+  </DialogContent></Dialog>;
 }
-
 export function ItemThumb({ item, size = "h-10 w-10" }: { item: { id?: string; color: string; image?: string; name: string }; size?: string }) {
   const src = item.image ?? (item.id ? SAMPLE_IMAGES[item.id] : undefined);
-  return src ? (
-    <img src={src} alt={item.name} loading="lazy" className={`${size} shrink-0 rounded-md border-2 border-border object-cover`} />
-  ) : (
-    <span className={`${size} inline-block shrink-0 rounded-md border-2 border-border`} style={{ background: item.color }} />
-  );
+  const [failed, setFailed] = useState(false);
+  return src && !failed ? <img src={src} alt={item.name} loading="lazy" onError={() => setFailed(true)} className={`${size} shrink-0 rounded-md border border-border object-cover`} /> : <span role="img" aria-label={`Photo unavailable: ${item.name}`} className={`${size} inline-flex shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground`}><ImageOff className="h-5 w-5" /></span>;
 }
