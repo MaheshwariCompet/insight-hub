@@ -12,4 +12,7 @@
 - Keep location, device profile, outfit favorites and saved plans in the same shared store to preserve the requested device-based workflow.
 - Share location-keyed weather queries across pages; never substitute sample weather when live forecasts fail, because recommendations must reflect the selected place.
 - Run optional photo analysis through a server function and server-only AI helpers; ask users to confirm fabric because photos cannot reliably establish fiber composition.
-- Keep choosing, future planning and wear logging in the planner; the overview links to it and insights derive only from recorded wardrobe data.
+- Keep detailed choosing and future planning in the planner; the dashboard also supports quick daily wear logging, and insights derive only from recorded wardrobe data.
+- Derive dashboard outfit priority and wear highlights through src/lib/dashboard.ts; unavailable clothes are excluded from suggestions, and undated inventory must not imply age.
+- Track optional item price, addition time and care status in the existing device store; missing values remain unknown instead of being seeded.
+- The shared Header owns the collapsible sidebar and top bar; all content pages reserve sidebar space using the global page-shell layout.

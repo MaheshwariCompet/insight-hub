@@ -21,8 +21,9 @@ function Planner() {
   const { items, history, plans, settings, logOutfit, setHistory, savePlan, removePlan, favorites, toggleFavorite } = useStore();
   const weather = useWeather();
   const [date, setDate] = useState(search["date"] ?? today()), [outfit, setOutfit] = useState<Outfit>({}), [mode, setMode] = useState("weather");
-  const forecast = weather.data?.find((d) => d.date === date) ?? weather.data?.[0];
-  const combos = forecast ? rankCombos(items, forecast, settings, history, date) : [];
+  const available = items.filter((i) => !i.careStatus || i.careStatus === "ready");
+  const forecast = weather.data?.find((d) => d.date === date);
+  const combos = forecast ? rankCombos(available, forecast, settings, history, date) : [];
   useEffect(() => {
     const date = search["date"] ?? today(); setDate(date);
     const saved = [...history, ...plans].find((p) => p.date === date);
@@ -31,12 +32,13 @@ function Planner() {
   }, [search["date"], search["outfit"], items]);
   const selectDate = (value: string) => { setDate(value); const saved = [...history, ...plans].find((p) => p.date === value); if (saved) setOutfit({ top: items.find((i) => i.id === saved.top), bottom: items.find((i) => i.id === saved.bottom), shoes: items.find((i) => i.id === saved.shoes) }); };
   function generate() {
-    if (mode === "random") { const pick = (c: Item["category"]) => { const pool = items.filter((i) => i.category === c); return pool[Math.floor(Math.random() * pool.length)]; }; setOutfit({ top: pick("top"), bottom: pick("bottom"), shoes: pick("shoes") }); return; }
+    if (mode === "random") { const pick = (c: Item["category"]) => { const pool = available.filter((i) => i.category === c); return pool[Math.floor(Math.random() * pool.length)]; }; setOutfit({ top: pick("top"), bottom: pick("bottom"), shoes: pick("shoes") }); return; }
     const next = combos.find((c) => c.top.id !== outfit.top?.id || c.bottom.id !== outfit.bottom?.id) ?? combos[0];
     if (next) setOutfit({ top: next.top, bottom: next.bottom, shoes: next.shoes }); else toast.error("Add a top and bottom, and check the forecast first.");
   }
   function save() {
     if (!outfit.top || !outfit.bottom) { toast.error("Choose a top and a bottom first."); return; }
+    if ([outfit.top, outfit.bottom, outfit.shoes].some((i) => i?.careStatus && i.careStatus !== "ready")) { toast.error("Choose ready-to-wear pieces first."); return; }
     const entry = { date, top: outfit.top.id, bottom: outfit.bottom.id, shoes: outfit.shoes?.id ?? "" };
     if (date > today()) { savePlan(entry); toast.success(`Outfit planned for ${date}`); } else { logOutfit(entry); removePlan(date); toast.success(`Outfit recorded for ${date}`); }
   }

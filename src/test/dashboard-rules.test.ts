@@ -1,0 +1,19 @@
+import { describe, expect, it } from "vitest";
+import { dailyOutfit, wardrobeHighlights, occasionSettings } from "../lib/dashboard";
+import { eligible, type Item, type Settings } from "../lib/wardrobe";
+const settings: Settings = { quest: "Casual", commute: "car", coldAC: false, zeroIron: false };
+const top: Item = { id: "top", name: "Shirt", category: "top", color: "red", heat: 8, rainPenalty: 0, rainSafe: true, wrinkles: false, crowdSafe: true, layer: false };
+const bottom: Item = { ...top, id: "bottom", category: "bottom" };
+const entry = { date: "2026-10-21", top: "top", bottom: "bottom", shoes: "" };
+describe("daily dashboard rules", () => {
+  it("shows a saved OOTD without requiring weather", () => { expect(dailyOutfit([top, bottom], [], [entry], undefined, settings, entry.date)?.source).toBe("planned"); });
+  it("prefers today's recorded outfit over a plan", () => { expect(dailyOutfit([top, bottom], [entry], [entry], undefined, settings, entry.date)?.source).toBe("recorded"); });
+  it("does not recommend saved clothes in laundry", () => { expect(dailyOutfit([{ ...top, careStatus: "laundry" }, bottom], [], [entry], undefined, settings, entry.date)).toBeUndefined(); });
+  it("excludes dry cleaning items from weather rotation", () => { expect(eligible([{ ...top, careStatus: "dry-cleaning" }, bottom], settings).map((i) => i.id)).toEqual(["bottom"]); });
+  it("calculates price divided by recorded wears", () => { const h = wardrobeHighlights([{ ...top, price: 1200 }], [entry, { ...entry, date: "2026-10-20" }], entry.date); expect(h.champion?.cpw).toBe(600); });
+  it("does not invent purchase prices", () => { expect(wardrobeHighlights([top], [entry], entry.date).champion).toBeUndefined(); });
+  it("marks a 90-day wear gap but not an 89-day gap", () => { expect(wardrobeHighlights([top], [{ ...entry, date: "2026-07-23" }], entry.date).orphans.length).toBe(1); expect(wardrobeHighlights([top], [{ ...entry, date: "2026-07-24" }], entry.date).orphans.length).toBe(0); });
+  it("does not call undated unrecorded items months old", () => { expect(wardrobeHighlights([top], [], entry.date).orphans.length).toBe(0); });
+  it("prioritizes formal clothes for a work meeting", () => { expect(occasionSettings(settings, "Work meeting").quest).toBe("Pitch"); });
+  it("uses upload timestamps rather than sample ordering for recent additions", () => { expect(wardrobeHighlights([top, { ...bottom, addedAt: "2026-10-21T08:00:00Z" }], [], entry.date).recent.map((i) => i.id)).toEqual(["bottom"]); });
+});
