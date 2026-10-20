@@ -48,7 +48,7 @@ export function AddItemDialog({ trigger }: { trigger?: ReactNode }) {
   function save(e: React.FormEvent) {
     e.preventDefault();
     if (!drafts.length || drafts.some((d) => !d.name.trim())) return setError("Add a photo and a name for each piece.");
-    try { addItems(drafts.map((d) => ({ id: d.id, name: d.name.trim(), category: d.category, fabric: d.fabric, color: d.color, image: d.image, ...fabricProperties(d.fabric), crowdSafe: true, layer: d.category === "outerwear", formal: 1 }))); toast.success(`${drafts.length} piece${drafts.length === 1 ? "" : "s"} added to your wardrobe`); setDrafts([]); setOpen(false); }
+    try { addItems(drafts.map((d) => ({ id: d.id, name: d.name.trim(), category: d.category, fabric: d.fabric, color: d.color, image: d.image, addedAt: new Date().toISOString(), careStatus: "ready" as const, ...fabricProperties(d.fabric), crowdSafe: true, layer: d.category === "outerwear", formal: 1 }))); toast.success(`${drafts.length} piece${drafts.length === 1 ? "" : "s"} added to your wardrobe`); setDrafts([]); setOpen(false); }
     catch { setError("Your browser storage is full. Remove a few photos and try again."); }
   }
   return <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild>{trigger ?? <Button><Plus />Add clothes</Button>}</DialogTrigger><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle className="text-2xl">Add to your wardrobe</DialogTitle><DialogDescription>Choose photos of your own clothes.</DialogDescription></DialogHeader>

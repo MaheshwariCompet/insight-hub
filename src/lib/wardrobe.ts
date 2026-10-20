@@ -33,6 +33,9 @@ export interface Item {
   style?: Style;
   image?: string;
   fabric?: string;
+  addedAt?: string;
+  price?: number;
+  careStatus?: "ready" | "laundry" | "dry-cleaning";
 }
 
 export function seasonOf(i: Item): Season {
@@ -113,7 +116,8 @@ export const SAMPLE_WEEK: DayWeather[] = [
 ].map((d, i) => ({ ...d, date: addDays(today(), i) }));
 
 export function today() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 export function addDays(date: string, n: number) {
   const d = new Date(date + "T00:00:00Z");
@@ -143,6 +147,7 @@ export interface ScoreResult {
 
 export function eligible(items: Item[], s: Settings) {
   return items.filter((i) => {
+    if (i.careStatus && i.careStatus !== "ready") return false;
     if (s.zeroIron && i.wrinkles) return false;
     if (s.commute === "crowded" && !i.crowdSafe) return false;
     return true;
@@ -152,7 +157,8 @@ export function eligible(items: Item[], s: Settings) {
 function pickLayer(items: Item[], top: Item, s: Settings) {
   const layers = items.filter((i) => (i.layer || i.category === "outerwear") && i.id !== top.id);
   if (!layers.length) return { layer: undefined, kind: "none" as const };
-  const best = [...layers].sort((a, b) => a.heat - b.heat)[0]!;
+  const best = [...layers].sort((a, b) => a.heat - b.heat)[0];
+  if (!best) return { layer: undefined, kind: "none" as const };
   return { layer: best, kind: best.heat <= 7 ? ("suitable" as const) : ("light" as const) };
 }
 
@@ -231,8 +237,8 @@ export function rankCombos(items: Item[], w: DayWeather, s: Settings, history: W
       const opts = shoes.length ? shoes : [undefined];
       const best = opts
         .map((sh) => scoreOutfit(t, b, sh, ok, w, s, history, on))
-        .sort((x, y) => y.score - x.score)[0]!;
-      out.push(best);
+        .sort((x, y) => y.score - x.score)[0];
+      if (best) out.push(best);
     }
   return out.sort((a, b) => b.score - a.score);
 }
