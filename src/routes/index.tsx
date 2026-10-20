@@ -19,8 +19,8 @@ export const Route = createFileRoute("/")({ head: () => ({ meta: [
 function Overview() {
   const { items, history, settings, profile, plans, favorites, toggleFavorite, logOutfit, removePlan, occasions, setOccasion, updateItem } = useStore();
   const weather = useWeather();
-  const [date, setDate] = useState(today());
-  useEffect(() => { const timer = window.setInterval(() => setDate(today()), 60000); return () => window.clearInterval(timer); }, []);
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  useEffect(() => { setDate(today()); const timer = window.setInterval(() => setDate(today()), 60000); return () => window.clearInterval(timer); }, []);
   const occasion = occasions[date] ?? (new Date(date + "T12:00:00").getDay() % 6 === 0 ? "Casual weekend" : "Everyday");
   const outfit = dailyOutfit(items, history, plans, weather.data?.find((d) => d.date === date), occasionSettings(settings, occasion), date);
   const stats = wardrobeHighlights(items, history, date);

@@ -34,7 +34,7 @@ export interface Item {
   image?: string;
   fabric?: string;
   addedAt?: string;
-  price?: number;
+  price?: number | undefined;
   careStatus?: "ready" | "laundry" | "dry-cleaning";
 }
 

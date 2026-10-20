@@ -20,7 +20,7 @@ function Planner() {
   const search = Route.useSearch();
   const { items, history, plans, settings, logOutfit, setHistory, savePlan, removePlan, favorites, toggleFavorite } = useStore();
   const weather = useWeather();
-  const [date, setDate] = useState(search["date"] ?? today()), [outfit, setOutfit] = useState<Outfit>({}), [mode, setMode] = useState("weather");
+  const [date, setDate] = useState(search["date"] ?? new Date().toISOString().slice(0, 10)), [outfit, setOutfit] = useState<Outfit>({}), [mode, setMode] = useState("weather");
   const available = items.filter((i) => !i.careStatus || i.careStatus === "ready");
   const forecast = weather.data?.find((d) => d.date === date);
   const combos = forecast ? rankCombos(available, forecast, settings, history, date) : [];
