@@ -3,3 +3,7 @@
 - [x] Add profile and favorite outfits; replace simulated analytics with real wardrobe insights.
 - [x] Apply minimalist boutique styling and verify the central flows.
 - [x] Enable and verify AI photo analysis with a real uploaded photo.
+- [x] Refresh the dashboard and shared sidebar to match the boutique reference.
+- [x] Add daily outfit quick logging, remembered location, and manually selected occasion context (external calendar sync not connected).
+- [x] Add real wear highlights, optional purchase prices, recent additions, scheduled outfits and laundry tracking.
+- [x] Verify dashboard flows and rule tests.

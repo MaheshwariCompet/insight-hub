@@ -24,7 +24,7 @@ export const Route = createFileRoute("/wardrobe")({
 });
 
 function Wardrobe() {
-  const { items, removeItem, setItems } = useStore();
+  const { items, removeItem, setItems, updateItem } = useStore();
   const [f, setF] = useState(NO_FILTERS);
   const [q, setQ] = useState("");
   const shown = applyFilters(items, f).filter((i) => i.name.toLowerCase().includes(q.toLowerCase()));
@@ -49,6 +49,8 @@ function Wardrobe() {
                 <span className="chip bg-accent capitalize">{i.category}</span>
                 <span className="chip bg-muted">{i.fabric ?? "Fabric not recorded"}</span>
               </div>
+              <label className="mt-3 text-xs text-muted-foreground">Clothing care<select aria-label={`Care status for ${i.name}`} value={i.careStatus ?? "ready"} onChange={(e) => updateItem(i.id, { careStatus: e.target.value as "ready" | "laundry" | "dry-cleaning" })} className="mt-1 w-full text-xs"><option value="ready">Ready to wear</option><option value="laundry">In laundry</option><option value="dry-cleaning">At dry cleaning</option></select></label>
+              <label className="mt-3 text-xs text-muted-foreground">Purchase price (₹, optional)<input type="number" min="0" step="0.01" aria-label={`Purchase price for ${i.name}`} defaultValue={i.price ?? ""} placeholder="Not recorded" onBlur={(e) => { const value = e.target.value; const price = Number(value); if (!value || (Number.isFinite(price) && price >= 0)) updateItem(i.id, { price: value ? price : undefined }); }} className="mt-1 w-full text-xs" /></label>
               <Button title={`Remove ${i.name}`} aria-label={`Remove ${i.name}`} variant="ghost" size="icon" onClick={() => { removeItem(i.id); toast(`${i.name} removed`); }} className="mt-3 self-end"><Trash2 /></Button>
             </div>
           </div>

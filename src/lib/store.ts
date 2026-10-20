@@ -10,6 +10,8 @@ interface State {
   profile: Profile;
   favorites: string[];
   plans: WearEntry[];
+  locationChosen: boolean;
+  occasions: Record<string, string>;
 }
 
 const DEFAULTS: State = {
@@ -20,8 +22,10 @@ const DEFAULTS: State = {
   profile: { name: "", work: "" },
   favorites: [],
   plans: [],
+  locationChosen: false,
+  occasions: {},
 };
-const KEYS = { items: "fc-wardrobe", history: "fc-history", settings: "fc-settings", location: "fc-location", profile: "fc-profile", favorites: "fc-favorites", plans: "fc-plans" } as const;
+const KEYS = { items: "fc-wardrobe", history: "fc-history", settings: "fc-settings", location: "fc-location", profile: "fc-profile", favorites: "fc-favorites", plans: "fc-plans", locationChosen: "fc-location-chosen", occasions: "fc-occasions" } as const;
 
 let state: State = DEFAULTS;
 let loaded = false;
@@ -37,6 +41,7 @@ function load() {
       if (raw) (next as Record<string, unknown>)[k] = JSON.parse(raw);
     } catch {}
   }
+  if (localStorage.getItem(KEYS.location)) next.locationChosen = true;
   state = next;
 }
 
@@ -64,10 +69,13 @@ export function useStore() {
     addItem: (i: Item) => set("items", [...state.items, i]),
     addItems: (v: Item[]) => set("items", [...state.items, ...v]),
     removeItem: (id: string) => set("items", state.items.filter((x) => x.id !== id)),
+    updateItem: (id: string, patch: Partial<Pick<Item, "price" | "careStatus">>) => set("items", state.items.map((i) => i.id === id ? { ...i, ...patch } : i)),
     setHistory: (v: WearEntry[]) => set("history", v),
     logOutfit: (e: WearEntry) => set("history", [...state.history.filter((h) => h.date !== e.date), e]),
     setSettings: (v: Settings) => set("settings", v),
-    setLocation: (v: Place) => set("location", v),
+    setLocation: (v: Place) => { set("location", v); set("locationChosen", true); },
+    markLocationChosen: () => set("locationChosen", true),
+    setOccasion: (date: string, value: string) => set("occasions", { ...state.occasions, [date]: value }),
     setProfile: (v: Profile) => set("profile", v),
     toggleFavorite: (key: string) => set("favorites", state.favorites.includes(key) ? state.favorites.filter((x) => x !== key) : [...state.favorites, key]),
     savePlan: (e: WearEntry) => set("plans", [...state.plans.filter((p) => p.date !== e.date), e]),

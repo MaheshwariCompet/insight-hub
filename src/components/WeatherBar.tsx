@@ -1,18 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MapPin, Search, CloudRain, Sun, LocateFixed } from "lucide-react";
 import { Button } from "./ui/button";
 import { useStore } from "@/lib/store";
 import { useWeather } from "@/lib/weather";
 import type { Place } from "@/lib/wardrobe";
 
+let initialLocationRequested = false;
 export function WeatherBar() {
-  const { location, setLocation } = useStore();
+  const { location, setLocation, locationChosen, markLocationChosen } = useStore();
   const weather = useWeather();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Place[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  useEffect(() => {
+    if (initialLocationRequested || locationChosen || localStorage.getItem("fc-location") || localStorage.getItem("fc-location-chosen")) return;
+    initialLocationRequested = true;
+    markLocationChosen();
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition((p) => setLocation({ name: "My location", latitude: p.coords.latitude, longitude: p.coords.longitude }), () => setError("Location wasn't shared. You can choose your city with Change."));
+  }, [locationChosen, markLocationChosen, setLocation]);
   async function search(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setError(""); setResults([]);
     try {
@@ -36,6 +44,7 @@ export function WeatherBar() {
       {day ? <div className="flex flex-wrap items-center gap-5 text-sm"><span className="flex items-center gap-2"><Sun className="h-4 w-4 text-sun" />{day.high}° / {day.low}°</span><span className="flex items-center gap-2"><CloudRain className="h-4 w-4 text-rain" />{day.rain}% rain</span><span className="text-xs text-muted-foreground">Today · Open-Meteo</span></div> : <span className="text-sm text-muted-foreground">{weather.isError ? "Weather unavailable" : "Loading forecast…"}</span>}
     </div>
     {weather.isError && <div className="mt-2 flex items-center gap-2 text-sm text-destructive">No live forecast. Outfit suggestions are paused.<Button variant="link" onClick={() => weather.refetch()}>Retry</Button></div>}
+    {!open && error && <p role="status" className="mt-2 text-xs text-muted-foreground">{error}</p>}
     {open && <div className="mt-4 border-t border-border pt-4"><form onSubmit={search} className="flex flex-wrap gap-2"><input aria-label="City or town" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="City or town" minLength={2} maxLength={100} required className="min-w-0 flex-1" /><Button disabled={busy}><Search />Search</Button><Button type="button" variant="outline" disabled={busy} onClick={locate}><LocateFixed />Use my location</Button></form>{error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}<div className="mt-2 flex flex-col items-start">{results.map((p) => <Button key={`${p.latitude},${p.longitude}`} variant="ghost" className="h-auto whitespace-normal py-2 text-left" onClick={() => { setLocation(p); setOpen(false); setResults([]); }}><MapPin />{p.name}</Button>)}</div></div>}
   </section>;
 }

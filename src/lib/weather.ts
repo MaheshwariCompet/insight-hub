@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useStore } from "./store";
 import type { DayWeather, Place } from "./wardrobe";
+import { today } from "./wardrobe";
 
 export async function fetchWeather(place: Place, signal?: AbortSignal): Promise<DayWeather[]> {
   const params = new URLSearchParams({ latitude: String(place.latitude), longitude: String(place.longitude), daily: "temperature_2m_max,temperature_2m_min,precipitation_probability_max", forecast_days: "7", timezone: "auto" });
@@ -12,5 +13,5 @@ export async function fetchWeather(place: Place, signal?: AbortSignal): Promise<
 }
 export function useWeather() {
   const { location } = useStore();
-  return useQuery({ queryKey: ["weather", location.latitude, location.longitude], queryFn: ({ signal }) => fetchWeather(location, signal), staleTime: 600_000, retry: 1 });
+  return useQuery({ queryKey: ["weather", location.latitude, location.longitude, today()], queryFn: ({ signal }) => fetchWeather(location, signal), staleTime: 600_000, refetchInterval: 600_000, retry: 1 });
 }
