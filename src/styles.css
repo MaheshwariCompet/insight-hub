@@ -67,6 +67,12 @@
   --bad: oklch(0.68 0.2 25);
   --sun: oklch(0.85 0.17 80);
   --rain: oklch(0.7 0.12 235);
+  --mood-neutral: oklch(0.55 0.025 165);
+  --mood-bold: oklch(0.55 0.19 15);
+  --mood-comfort: oklch(0.6 0.09 190);
+  --mood-neutral-surface: oklch(0.95 0.01 165);
+  --mood-bold-surface: oklch(0.94 0.035 15);
+  --mood-comfort-surface: oklch(0.95 0.02 190);
 }
 
 @utility fit-card {
@@ -159,6 +165,45 @@ body:has(.sidebar-collapsed) .page-shell { margin-left: 78px; }
 .section-heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .section-heading h2 { margin-top: 6px; }
 .weather-band { background: var(--secondary); padding: 12px 18px; }
+.energy-minimalist { --secondary: var(--mood-neutral-surface); }
+.energy-bold { --secondary: var(--mood-bold-surface); }
+.energy-comfort { --secondary: var(--mood-comfort-surface); }
+.ootd-display, .weather-band, .week-day { transition: background-color 450ms ease; }
+.energy-section { margin-top: 28px; padding: 22px 0; border-block: 1px solid var(--border); }
+.energy-section h2 { font-size: 1.65rem; }
+.mood-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.mood-option { position: relative; min-width: 0; --mood-color: var(--mood-neutral); --mood-surface: var(--mood-neutral-surface); }
+.mood-bold { --mood-color: var(--mood-bold); --mood-surface: var(--mood-bold-surface); }
+.mood-comfort { --mood-color: var(--mood-comfort); --mood-surface: var(--mood-comfort-surface); }
+.mood-button { width: 100%; height: 138px; white-space: normal; display: flex; flex-direction: column; gap: 10px; position: relative; border: 1px solid var(--border); padding: 12px 20px; border-radius: var(--radius); }
+.mood-button:hover, .mood-button[aria-pressed="true"] { background: var(--mood-surface); border-color: var(--mood-color); }
+.mood-symbol { font-family: Georgia, serif; font-size: 42px; line-height: 1; color: var(--mood-color); display: block; height: 44px; }
+.mood-button:hover .mood-symbol, .mood-button:focus-visible .mood-symbol { animation: mood-pulse 1.4s ease-in-out infinite; }
+.mood-label { font-size: 12px; line-height: 1.35; text-align: center; }
+.mood-caption { display: block; color: var(--muted-foreground); font-size: 10px; margin-top: 4px; }
+.mood-check { position: absolute; top: 8px; right: 8px; width: 16px; height: 16px; color: var(--mood-color); }
+.mood-confetti { position: absolute; inset: 0; pointer-events: none; z-index: 20; }
+.mood-confetti i { position: absolute; top: 45%; left: 50%; width: 5px; height: 8px; background: var(--mood-bold); animation: mood-burst 850ms ease-out forwards; }
+.mood-confetti i:nth-child(3n) { background: var(--sun); }
+.mood-confetti i:nth-child(3n + 1) { background: var(--mood-comfort); }
+.mood-confetti i:nth-child(12n + 1) { --burst-x: 90px; --burst-y: 0px; }
+.mood-confetti i:nth-child(12n + 2) { --burst-x: 78px; --burst-y: 45px; }
+.mood-confetti i:nth-child(12n + 3) { --burst-x: 45px; --burst-y: 78px; }
+.mood-confetti i:nth-child(12n + 4) { --burst-x: 0px; --burst-y: 90px; }
+.mood-confetti i:nth-child(12n + 5) { --burst-x: -45px; --burst-y: 78px; }
+.mood-confetti i:nth-child(12n + 6) { --burst-x: -78px; --burst-y: 45px; }
+.mood-confetti i:nth-child(12n + 7) { --burst-x: -90px; --burst-y: 0px; }
+.mood-confetti i:nth-child(12n + 8) { --burst-x: -78px; --burst-y: -45px; }
+.mood-confetti i:nth-child(12n + 9) { --burst-x: -45px; --burst-y: -78px; }
+.mood-confetti i:nth-child(12n + 10) { --burst-x: 0px; --burst-y: -90px; }
+.mood-confetti i:nth-child(12n + 11) { --burst-x: 45px; --burst-y: -78px; }
+.mood-confetti i:nth-child(12n + 12) { --burst-x: 78px; --burst-y: -45px; }
+.mood-confetti i:nth-child(n + 13) { animation-duration: 1100ms; width: 4px; height: 4px; }
+@keyframes mood-pulse { 50% { transform: scale(1.13) rotate(5deg); } }
+@keyframes mood-burst { from { opacity: 1; transform: translate(0, 0) rotate(0); } to { opacity: 0; transform: translate(var(--burst-x), var(--burst-y)) rotate(260deg); } }
+@media (max-width: 700px) { .mood-grid { gap: 6px; } .mood-button { height: 155px; padding-inline: 8px; } }
+@media (max-width: 420px) { .mood-grid { grid-template-columns: 1fr; } .mood-button { height: 88px; flex-direction: row; justify-content: flex-start; gap: 16px; padding: 12px 20px; } .mood-label { text-align: left; } }
+@media (prefers-reduced-motion: reduce) { .mood-confetti { display: none; } }
 .nav-link { padding-bottom: 4px; font-weight: 500; }
 .nav-link:hover { color: var(--primary); }
 @media (max-width: 640px) { h1 { font-size: 2.25rem; } .page-intro { padding: 28px 0 24px; } }

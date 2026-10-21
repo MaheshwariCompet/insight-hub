@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MapPin, Search, CloudRain, Sun, LocateFixed } from "lucide-react";
 import { Button } from "./ui/button";
 import { useStore } from "@/lib/store";
 import { useWeather } from "@/lib/weather";
 import type { Place } from "@/lib/wardrobe";
+import { resolveLocation } from "@/lib/location";
 
 let initialLocationRequested = false;
 export function WeatherBar() {
@@ -14,12 +15,33 @@ export function WeatherBar() {
   const [results, setResults] = useState<Place[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const currentLocation = useRef(location);
+  currentLocation.current = location;
+  async function applyPosition(p: GeolocationPosition) {
+    const { latitude, longitude } = p.coords;
+    const provisional = { name: `${latitude.toFixed(3)}°, ${longitude.toFixed(3)}°`, latitude, longitude };
+    currentLocation.current = provisional;
+    setLocation(provisional);
+    const place = await resolveLocation(latitude, longitude);
+    if (currentLocation.current.latitude !== latitude || currentLocation.current.longitude !== longitude) return;
+    setLocation(place);
+    if (place.name === provisional.name) setError("City name unavailable. Your weather uses these coordinates; you can search for your city.");
+  }
+  useEffect(() => {
+    if (location.name !== "My location") return;
+    const controller = new AbortController();
+    const { latitude, longitude } = location;
+    void resolveLocation(latitude, longitude, controller.signal).then((place) => {
+      if (!controller.signal.aborted && currentLocation.current.latitude === latitude && currentLocation.current.longitude === longitude && currentLocation.current.name === "My location") setLocation(place);
+    });
+    return () => controller.abort();
+  }, [location.name, location.latitude, location.longitude]);
   useEffect(() => {
     if (initialLocationRequested || locationChosen || localStorage.getItem("fc-location") || localStorage.getItem("fc-location-chosen")) return;
     initialLocationRequested = true;
     markLocationChosen();
     if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition((p) => setLocation({ name: "My location", latitude: p.coords.latitude, longitude: p.coords.longitude }), () => setError("Location wasn't shared. You can choose your city with Change."));
+    navigator.geolocation.getCurrentPosition((p) => { void applyPosition(p); }, () => setError("Location wasn't shared. You can choose your city with Change."));
   }, [locationChosen, markLocationChosen, setLocation]);
   async function search(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setError(""); setResults([]);
@@ -35,7 +57,7 @@ export function WeatherBar() {
   function locate() {
     setBusy(true); setError("");
     if (!navigator.geolocation) { setBusy(false); setError("Location is unavailable. Search for your city instead."); return; }
-    navigator.geolocation.getCurrentPosition((p) => { setLocation({ name: "My location", latitude: p.coords.latitude, longitude: p.coords.longitude }); setOpen(false); setBusy(false); }, () => { setError("Location access is unavailable. Search for your city instead."); setBusy(false); });
+    navigator.geolocation.getCurrentPosition((p) => { void applyPosition(p).finally(() => { setOpen(false); setBusy(false); }); }, () => { setError("Location access is unavailable. Search for your city instead."); setBusy(false); }, { timeout: 10000 });
   }
   const day = weather.data?.[0];
   return <section className="weather-band mt-6">
