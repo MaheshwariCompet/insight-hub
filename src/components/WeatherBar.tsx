@@ -20,6 +20,7 @@ export function WeatherBar() {
   async function applyPosition(p: GeolocationPosition) {
     const { latitude, longitude } = p.coords;
     const provisional = { name: `${latitude.toFixed(3)}°, ${longitude.toFixed(3)}°`, latitude, longitude };
+    currentLocation.current = provisional;
     setLocation(provisional);
     const place = await resolveLocation(latitude, longitude);
     if (currentLocation.current.latitude !== latitude || currentLocation.current.longitude !== longitude) return;

@@ -18,7 +18,7 @@ export function dailyOutfit(items: Item[], history: WearEntry[], plans: WearEntr
   const saved = resolve(plans.find((e) => e.date === date));
   if (saved) return { ...saved, source: "planned" as const, reasons: [] as string[] };
   const combos = weather ? rankCombos(items, weather, settings, history, date) : [];
-  if (mood) combos.sort((a, b) => Number(a.rainRisk) - Number(b.rainRisk) || (b.score + (moodAffinity(b.top, mood) + moodAffinity(b.bottom, mood)) / 2) - (a.score + (moodAffinity(a.top, mood) + moodAffinity(a.bottom, mood)) / 2));
+  if (mood) combos.sort((a, b) => Number(a.rainRisk) - Number(b.rainRisk) || (b.score + moodAffinity(b.top, mood) + moodAffinity(b.bottom, mood)) - (a.score + moodAffinity(a.top, mood) + moodAffinity(a.bottom, mood)));
   const best = combos[0];
   return best ? { ...best, source: "suggested" as const } : undefined;
 }
