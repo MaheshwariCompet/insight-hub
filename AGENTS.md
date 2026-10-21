@@ -16,3 +16,5 @@
 - Derive dashboard outfit priority and wear highlights through src/lib/dashboard.ts; unavailable clothes are excluded from suggestions, and undated inventory must not imply age.
 - Track optional item price, addition time and care status in the existing device store; missing values remain unknown instead of being seeded.
 - The shared Header owns the collapsible sidebar and top bar; all content pages reserve sidebar space using the global page-shell layout.
+- Daily energy moods live in the shared device store and bias dashboard color ranking without replacing saved or recorded outfits or prioritizing rain-risky clothes over rain-safe choices.
+- Resolve geolocation names through the browser-safe location helper; preserve actual coordinates and show them when city lookup fails rather than inventing a place.

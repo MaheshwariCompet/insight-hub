@@ -1,11 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { dailyOutfit, wardrobeHighlights, occasionSettings } from "../lib/dashboard";
 import { eligible, type Item, type Settings } from "../lib/wardrobe";
+import { moodAffinity } from "../lib/moods";
 const settings: Settings = { quest: "Casual", commute: "car", coldAC: false, zeroIron: false };
 const top: Item = { id: "top", name: "Shirt", category: "top", color: "red", heat: 8, rainPenalty: 0, rainSafe: true, wrinkles: false, crowdSafe: true, layer: false };
 const bottom: Item = { ...top, id: "bottom", category: "bottom" };
 const entry = { date: "2026-10-21", top: "top", bottom: "bottom", shoes: "" };
 describe("daily dashboard rules", () => {
+  const weather = { date: entry.date, high: 30, low: 25, rain: 0 };
+  const neutral = { ...top, id: "neutral", color: "white" };
+  const bold = { ...top, id: "bold", color: "red" };
+  it("selects neutral clothes for Effortless Minimalist", () => { expect(dailyOutfit([bold, neutral, bottom], [], [], weather, settings, entry.date, "minimalist")?.top.id).toBe("neutral"); });
+  it("selects saturated clothes for Bold & Edgy", () => { expect(dailyOutfit([neutral, bold, bottom], [], [], weather, settings, entry.date, "bold")?.top.id).toBe("bold"); });
+  it("selects soft light tones for Ultimate Comfort", () => { expect(dailyOutfit([bold, neutral, bottom], [], [], weather, settings, entry.date, "comfort")?.top.id).toBe("neutral"); });
+  it("does not replace a recorded outfit when mood changes", () => { expect(dailyOutfit([top, neutral, bottom], [entry], [], weather, settings, entry.date, "comfort")?.top.id).toBe("top"); });
+  it("keeps rain-safe outfits ahead of a mood color match", () => { expect(dailyOutfit([{ ...neutral, rainSafe: false }, bold, bottom], [], [], { ...weather, rain: 80 }, settings, entry.date, "minimalist")?.top.id).toBe("bold"); });
+  it("does not guess an unknown color's mood", () => { expect(moodAffinity({ ...top, color: "unknown" }, "bold")).toBe(0); });
   it("shows a saved OOTD without requiring weather", () => { expect(dailyOutfit([top, bottom], [], [entry], undefined, settings, entry.date)?.source).toBe("planned"); });
   it("prefers today's recorded outfit over a plan", () => { expect(dailyOutfit([top, bottom], [entry], [entry], undefined, settings, entry.date)?.source).toBe("recorded"); });
   it("does not recommend saved clothes in laundry", () => { expect(dailyOutfit([{ ...top, careStatus: "laundry" }, bottom], [], [entry], undefined, settings, entry.date)).toBeUndefined(); });
