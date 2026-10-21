@@ -7,5 +7,5 @@
 - [x] Add daily outfit quick logging, remembered location, and manually selected occasion context (external calendar sync not connected).
 - [x] Add real wear highlights, optional purchase prices, recent additions, scheduled outfits and laundry tracking.
 - [x] Verify dashboard flows and rule tests.
-- [ ] Add animated energy moods and mood-aware daily outfit palettes.
-- [ ] Resolve city names for device location and verify both interactions.
+- [x] Add animated energy moods and mood-aware daily outfit palettes.
+- [x] Resolve city names for device location and verify both interactions.
