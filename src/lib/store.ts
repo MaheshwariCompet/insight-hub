@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { SAMPLE_WARDROBE, type Item, type Settings, type WearEntry, type Place, type Profile } from "./wardrobe";
+import type { Mood } from "./moods";
 
 // Tiny persisted store shared by every page; survives refresh via localStorage.
 interface State {
@@ -12,6 +13,7 @@ interface State {
   plans: WearEntry[];
   locationChosen: boolean;
   occasions: Record<string, string>;
+  energyMoods: Record<string, Mood>;
 }
 
 const DEFAULTS: State = {
@@ -24,8 +26,9 @@ const DEFAULTS: State = {
   plans: [],
   locationChosen: false,
   occasions: {},
+  energyMoods: {},
 };
-const KEYS = { items: "fc-wardrobe", history: "fc-history", settings: "fc-settings", location: "fc-location", profile: "fc-profile", favorites: "fc-favorites", plans: "fc-plans", locationChosen: "fc-location-chosen", occasions: "fc-occasions" } as const;
+const KEYS = { items: "fc-wardrobe", history: "fc-history", settings: "fc-settings", location: "fc-location", profile: "fc-profile", favorites: "fc-favorites", plans: "fc-plans", locationChosen: "fc-location-chosen", occasions: "fc-occasions", energyMoods: "fc-energy-moods" } as const;
 
 let state: State = DEFAULTS;
 let loaded = false;
@@ -76,6 +79,7 @@ export function useStore() {
     setLocation: (v: Place) => { set("location", v); set("locationChosen", true); },
     markLocationChosen: () => set("locationChosen", true),
     setOccasion: (date: string, value: string) => set("occasions", { ...state.occasions, [date]: value }),
+    setEnergyMood: (date: string, value: Mood) => set("energyMoods", { ...state.energyMoods, [date]: value }),
     setProfile: (v: Profile) => set("profile", v),
     toggleFavorite: (key: string) => set("favorites", state.favorites.includes(key) ? state.favorites.filter((x) => x !== key) : [...state.favorites, key]),
     savePlan: (e: WearEntry) => set("plans", [...state.plans.filter((p) => p.date !== e.date), e]),

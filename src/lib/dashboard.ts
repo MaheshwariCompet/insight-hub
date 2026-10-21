@@ -1,10 +1,11 @@
 import { rankCombos, type Item, type WearEntry, type DayWeather, type Settings } from "./wardrobe";
+import { moodAffinity, type Mood } from "./moods";
 
 export const OCCASIONS = ["Everyday", "Work meeting", "Casual weekend", "Active day"];
 export function occasionSettings(settings: Settings, occasion: string): Settings {
   return { ...settings, quest: occasion === "Work meeting" ? "Pitch" : occasion === "Active day" ? "Hackathon" : "Casual" };
 }
-export function dailyOutfit(items: Item[], history: WearEntry[], plans: WearEntry[], weather: DayWeather | undefined, settings: Settings, date: string) {
+export function dailyOutfit(items: Item[], history: WearEntry[], plans: WearEntry[], weather: DayWeather | undefined, settings: Settings, date: string, mood?: Mood) {
   const resolve = (entry: WearEntry | undefined) => {
     if (!entry) return undefined;
     const top = items.find((i) => i.id === entry.top), bottom = items.find((i) => i.id === entry.bottom), shoes = items.find((i) => i.id === entry.shoes);
@@ -16,7 +17,9 @@ export function dailyOutfit(items: Item[], history: WearEntry[], plans: WearEntr
   if (recorded) return { ...recorded, source: "recorded" as const, reasons: [] as string[] };
   const saved = resolve(plans.find((e) => e.date === date));
   if (saved) return { ...saved, source: "planned" as const, reasons: [] as string[] };
-  const best = weather ? rankCombos(items, weather, settings, history, date)[0] : undefined;
+  const combos = weather ? rankCombos(items, weather, settings, history, date) : [];
+  if (mood) combos.sort((a, b) => Number(a.rainRisk) - Number(b.rainRisk) || (b.score + (moodAffinity(b.top, mood) + moodAffinity(b.bottom, mood)) / 2) - (a.score + (moodAffinity(a.top, mood) + moodAffinity(a.bottom, mood)) / 2));
+  const best = combos[0];
   return best ? { ...best, source: "suggested" as const } : undefined;
 }
 export function wardrobeHighlights(items: Item[], history: WearEntry[], date: string) {

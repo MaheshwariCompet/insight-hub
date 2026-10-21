@@ -4,6 +4,8 @@ import { Check, Heart, ArrowUpRight, ChevronLeft, ChevronRight, Shirt, CalendarD
 import { toast } from "sonner";
 import { Header } from "@/components/Header";
 import { WeatherBar } from "@/components/WeatherBar";
+import { EnergyMoods } from "@/components/EnergyMoods";
+import { MOODS } from "@/lib/moods";
 import { ItemThumb } from "@/components/AddItemDialog";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
@@ -17,12 +19,13 @@ export const Route = createFileRoute("/")({ head: () => ({ meta: [
 ]}), component: Overview });
 
 function Overview() {
-  const { items, history, settings, profile, plans, favorites, toggleFavorite, logOutfit, removePlan, occasions, setOccasion, updateItem } = useStore();
+  const { items, history, settings, profile, plans, favorites, toggleFavorite, logOutfit, removePlan, occasions, setOccasion, updateItem, energyMoods, setEnergyMood } = useStore();
   const weather = useWeather();
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   useEffect(() => { setDate(today()); const timer = window.setInterval(() => setDate(today()), 60000); return () => window.clearInterval(timer); }, []);
   const occasion = occasions[date] ?? (new Date(date + "T12:00:00").getDay() % 6 === 0 ? "Casual weekend" : "Everyday");
-  const outfit = dailyOutfit(items, history, plans, weather.data?.find((d) => d.date === date), occasionSettings(settings, occasion), date);
+  const mood = energyMoods[date];
+  const outfit = dailyOutfit(items, history, plans, weather.data?.find((d) => d.date === date), occasionSettings(settings, occasion), date, mood);
   const stats = wardrobeHighlights(items, history, date);
   const recorded = history.some((h) => h.date === date);
   const key = outfit ? outfitKey(outfit) : "";
@@ -34,9 +37,11 @@ function Overview() {
     try { logOutfit({ date, top: outfit.top.id, bottom: outfit.bottom.id, shoes: outfit.shoes?.id ?? "" }); removePlan(date); toast.success("Today's outfit recorded"); }
     catch { toast.error("Couldn't save on this device. Please free some browser storage."); }
   }
-  return <main className="page-shell"><Header />
+  return <main className={`page-shell ${mood ? `energy-${mood}` : ""}`}><Header />
     <section className="dashboard-welcome"><div><p className="eyebrow mb-2">A fresh day. A little inspiration.</p><h1>Good morning{profile.name ? `, ${profile.name}` : ""}.</h1><p className="mt-2 text-sm text-muted-foreground">Let's find something that feels like you.</p></div><p className="flex items-center gap-2 text-xs text-muted-foreground"><CalendarDays className="h-4 w-4" />{new Date(date + "T12:00:00").toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" })}</p></section>
     <WeatherBar />
+    <EnergyMoods value={mood} onChange={(value) => setEnergyMood(date, value)} />
+    {mood && <p role="status" className="mt-3 text-xs text-muted-foreground">{outfit?.source === "recorded" ? "Your worn outfit stays in your diary." : outfit?.source === "planned" ? "Your saved outfit stays as planned." : `${MOODS.find((m) => m.id === mood)?.palette} · Selected from your wardrobe for today's weather.`}</p>}
     <div className="dashboard-grid"><section className="min-w-0"><div className="section-heading"><div><p className="eyebrow">Made for your day</p><h2>Outfit of the day</h2></div><Button asChild variant="ghost" size="icon"><Link to="/planner" title="Open outfit planner" aria-label="Open outfit planner"><ArrowUpRight /></Link></Button></div>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><label className="text-xs text-muted-foreground">Today's occasion <select aria-label="Today's occasion" value={occasion} onChange={(e) => setOccasion(date, e.target.value)} className="ml-2 text-xs">{OCCASIONS.map((o) => <option key={o}>{o}</option>)}</select></label><span className="text-[11px] text-primary">{outfit?.source === "planned" ? "Your saved outfit" : outfit?.source === "recorded" ? "Worn today" : "Weather + wardrobe rotation"}</span></div>
       {outfit ? <><div className="ootd-display"><Button variant="ghost" size="icon" className="absolute right-3 top-3 z-10" title="Favorite today's outfit" aria-label="Favorite today's outfit" aria-pressed={favorites.includes(key)} onClick={() => toggleFavorite(key)}><Heart className={favorites.includes(key) ? "fill-primary text-primary" : "text-primary"} /></Button><div className="ootd-photos"><ItemThumb item={outfit.top} size="h-64 w-full" /><div className="ootd-detail-photos"><ItemThumb item={outfit.bottom} size="h-36 w-full" />{outfit.shoes && <ItemThumb item={outfit.shoes} size="h-36 w-full" />}</div></div></div><div className="mt-5 flex flex-wrap items-center justify-between gap-4"><div className="min-w-0"><h3 className="font-display text-2xl">{outfit.top.name}</h3><p className="mt-1 text-xs text-muted-foreground">{outfit.bottom.name}{outfit.shoes ? ` · ${outfit.shoes.name}` : ""}</p></div><Button onClick={wear} disabled={recorded}><Check />{recorded ? "Worn today" : "Wear this today"}</Button></div>{outfit.reasons[0] && <p className="mt-3 flex gap-2 text-xs text-muted-foreground"><Sparkles className="h-3.5 w-3.5 shrink-0" />{outfit.reasons[0]}</p>}<Button asChild variant="link" className="mt-2 px-0"><Link to="/planner" search={{ date, outfit: key }}>Choose another outfit <ArrowUpRight /></Link></Button></> : <div className="ootd-display flex flex-col items-center justify-center gap-4 text-center"><Shirt className="h-9 w-9 text-primary" /><h3 className="font-display text-2xl">Your next look is waiting</h3><p className="max-w-xs text-sm text-muted-foreground">{weather.data ? "Add a ready-to-wear top and bottom to see today's outfit." : "Waiting for your local forecast. Saved outfits remain available."}</p><Button asChild variant="outline"><Link to="/planner">Open planner <ArrowUpRight /></Link></Button></div>}
